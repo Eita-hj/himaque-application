@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+		<meta http-equiv="Content-Style-Type" content="text/css">
+		<meta http-equiv="Content-Script-Type" content="text/javascript">
+		<meta name="viewport" content="width=device-width">
+		<link rel="shortcut icon" href="/favicon.ico">
+		<title>選択画面</title>
+		<style>
+			html {
+				background-color: #f0feff;
+				text-align: center;
+			}
+			label, select {
+				font-size: 1.5rem;
+			}}
+		</style>
+		<script>
+			function WindowChange(v) {
+				if (v == 2 || v == 3 || v == 4) {
+					document.getElementById("windowmore").innerHTML = "<h2>種類</h2>" + {
+						2: '<select id="windowtype"><option value="a">縦2窓</option><option value="b" selected>横2個</option></select><br />',
+						3: '<select id="windowtype"><option value="a">縦3窓</option><option value="b" selected>横3個</option></select><br />',
+						4: '<select id="windowtype"><option value="a">横4窓</option><option value="b" selected>田の字型</option></select><br />'
+					}[v]
+					
+				} else {
+					document.getElementById("windowmore").innerHTML = ""
+				}
+			}
+		</script>
+		<script src="./renderer_ModeSelect.js"></script>
+	</head>
+	<body>
+		<h1>モードを選択してください。</h1>
+		<h2>アドオン</h2>
+		<p><label><input type="radio" name="addon" value="true">あり</label>　<label><input type="radio" name="addon" value="false" checked>なし</label></p>
+		<h2>窓数(1～10)</h2>
+		<select id="window" onchange="WindowChange(this.value)">
+			<option value="1" selected>1窓</option>
+			<option value="2">2窓</option>
+			<option value="3">3窓</option>
+			<option value="4">4窓</option>
+			<option value="5">5窓</option>
+			<option value="6">6窓</option>
+			<option value="7">7窓</option>
+			<option value="8">8窓</option>
+			<option value="9">9窓</option>
+			<option value="10">10窓</option>
+		</select>
+		<br />
+		<div id="windowmore"></div>
+		<button onclick="send()">開始</button>
+	</body>
+</html>

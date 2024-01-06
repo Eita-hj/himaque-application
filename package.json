@@ -1,0 +1,52 @@
+{
+	"name": "himaque-application",
+	"version": "1.0.0",
+	"description": "application of HIMACHATQUEST",
+	"main": "./src/main.js",
+	"scripts": {
+		"start": "electron ./src",
+		"build-mac": "electron-builder -m --universal",
+		"build-win": "electron-builder -w --x64",
+		"build-linux": "electron-builder -l deb tar.xz",
+		"build-all": "electron-builder -lmw"
+	},
+	"devDependencies": {
+		"electron": "^25.3.2",
+		"electron-builder": "^24.6.3"
+	},
+	"build": {
+		"appId": "electron.himaqueapplication.withaddon",
+		"productName": "HIMACHATQUEST for Application with Addon",
+		"directories": {
+			"output": "dist"
+		},
+		"files": [
+			"assets",
+			"src",
+			"package.json",
+			"package-lock.json"
+		],
+		"linux": {
+			"icon": "assets/icon.png",
+			"target": "tar.gz",
+			"category": "Game"
+		},
+		"mac": {
+			"icon": "assets/icon.icns",
+			"target": [
+				"dmg"
+			]
+		},
+		"win": {
+			"icon": "assets/icon.ico",
+			"target": "nsis"
+		},
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true
+		},
+		"publish": null
+	},
+	"author": "eita(No.16762) <sgr.9661.ea@gmail.com>",
+	"homepage": "https://eita.f5.si/hcq/"
+}
