@@ -14,7 +14,7 @@ app.on("ready", () => {
 	app.on("activate", () => {
 		if (!BrowserWindow.getAllWindows().length) createWindow();
 	});
-	modeSelectWindow.loadFile("ModeSelect.html")
+	modeSelectWindow.loadFile( path.join(__dirname, "ModeSelect.html"))
 	modeSelectWindow.once("ready-to-show", () => {
 		modeSelectWindow.show();
 	});
