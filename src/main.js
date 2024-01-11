@@ -1,6 +1,17 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
 let c1 = 0, c2 = 0;
+const beforeSetting = {
+	windowCount: 1,
+	addon: false,
+	more_setting: "a"
+};
+
+app.once("ready", () => {
+	ipcMain.on("ready", (e) => {
+		return e.returnValue = beforeSetting;
+	});
+})
 
 app.once("ready", start)
 function start() {
@@ -42,6 +53,9 @@ function start() {
 				nodeIntegrationInSubFrames: true
 			}
 		});
+		beforeSetting.windowCount = obj.windowCount;
+		beforeSetting.addon = obj.addon;
+		beforeSetting.type = obj?.type || "a";
 		const url = obj.windowCount == 1 
 			? "https://himaquest.com/"
 			: obj?.type == "a"
