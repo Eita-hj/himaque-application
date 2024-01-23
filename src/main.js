@@ -13,8 +13,11 @@ app.once("ready", () => {
 	});
 })
 
+let mainWindow = null;
+
 app.once("ready", start)
 function start() {
+    mainWindow = null;
 	c2 = 0;
 	const modeSelectWindow = new BrowserWindow({
 		width: 800,
@@ -43,7 +46,7 @@ function start() {
 	ipcMain.once('start', (e, obj) => {
 		c1 = 1;
 		modeSelectWindow.close();
-		const mainWindow = new BrowserWindow({
+		mainWindow = new BrowserWindow({
 			width: 960,
 			height: 720,
 			show: false,
@@ -76,7 +79,8 @@ function start() {
 	})
 };
 
-const templateMenu = [
+const templateMenu =
+[
 	{
 		label: '表示',
 		submenu: [
@@ -84,7 +88,7 @@ const templateMenu = [
 				label: '再読み込み',
 				role: 'reload',
 				click(item, focusedWindow){
-					if(focusedWindow) focusedWindow.reload()
+					if (focusedWindow) focusedWindow.reload()
 				},
 			},
 			{

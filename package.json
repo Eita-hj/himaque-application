@@ -1,14 +1,14 @@
 {
 	"name": "himaque-application",
-	"version": "2.0.2",
+	"version": "2.0.3",
 	"description": "application of HIMACHATQUEST",
 	"main": "./src/main.js",
 	"scripts": {
 		"start": "electron ./src",
 		"build-mac": "electron-builder -m --universal",
 		"build-win": "electron-builder -w --x64",
-		"build-linux": "electron-builder -l deb tar.xz",
-		"build-all": "electron-builder -lmw"
+		"build-linux": "electron-builder -l deb rpm tar.xz",
+		"build-all": "electron-builder -wml"
 	},
 	"devDependencies": {
 		"electron": "^25.3.2",
@@ -28,7 +28,9 @@
 		],
 		"linux": {
 			"icon": "assets/icon.png",
-			"target": "tar.gz",
+			"target": [
+                "AppImage"
+            ],
 			"category": "Game"
 		},
 		"mac": {
