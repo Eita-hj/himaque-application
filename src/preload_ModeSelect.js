@@ -1,6 +1,6 @@
-const { contextBridge, ipcRenderer } = require('electron/renderer')
+const { contextBridge, ipcRenderer } = require("electron/renderer");
 
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld("electronAPI", {
 	start: (obj) => ipcRenderer.send("start", obj),
-	ready: () => ipcRenderer.sendSync("ready")
-})
+	ready: () => ipcRenderer.sendSync("ready"),
+});

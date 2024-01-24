@@ -81,13 +81,21 @@ function start() {
 													linux: "",
 												}[process.platform]
 											);
-                                            if (process.platform == "linux") await dialog.showMessageBox(nowWindow, {
-                                                buttons: ["OK"],
-                                                message: "ダウンロードをしました。新しいバージョンのファイルを開いて起動してください。"
-                                            }).then(() => {
-                                                const {shell} = require("electron")
-                                                shell.showItemInFolder(`/tmp/meteor/update_ver.${n.tag_name}.AppImage`)
-                                            })
+											if (process.platform == "linux")
+												await dialog
+													.showMessageBox(nowWindow, {
+														buttons: ["OK"],
+														message:
+															"ダウンロードをしました。新しいバージョンのファイルを開いて起動してください。",
+													})
+													.then(() => {
+														const {
+															shell,
+														} = require("electron");
+														shell.showItemInFolder(
+															`/tmp/meteor/update_ver.${n.tag_name}.AppImage`
+														);
+													});
 											nowWindow.close();
 										});
 									}
