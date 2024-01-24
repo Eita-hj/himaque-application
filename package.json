@@ -5,9 +5,9 @@
 	"main": "./src/main.js",
 	"scripts": {
 		"start": "electron ./src",
-		"build-mac": "electron-builder -m --universal",
+		"build-mac": "electron-builder -m",
 		"build-win": "electron-builder -w --x64",
-		"build-linux": "electron-builder -l deb rpm tar.xz",
+		"build-linux": "electron-builder -l",
 		"build-all": "electron-builder -wml"
 	},
 	"dependencies": {
@@ -18,8 +18,8 @@
 		"electron-builder": "^24.9.1"
 	},
 	"build": {
-		"appId": "electron.himaqueapplication.withaddon",
-		"productName": "HIMACHATQUEST for Application with Addon",
+		"appId": "electron.himaqueapp.meteor",
+		"productName": "Meteor",
 		"directories": {
 			"output": "dist"
 		},
