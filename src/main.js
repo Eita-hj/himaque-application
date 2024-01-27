@@ -48,7 +48,7 @@ function start() {
 	});
 	modeSelectWindow.loadFile(path.join(__dirname, "ModeSelect.html"));
 	modeSelectWindow.once("ready-to-show", () => {
-		if (!versionChecked)
+		if (!versionChecked) {
 			fetch(
 				"https://api.github.com/repos/Eita-hj/himaque-application/releases/latest"
 			)
@@ -116,6 +116,9 @@ function start() {
 						modeSelectWindow.show();
 					}
 				});
+		} else {
+            modeSelectWindow.show();
+        }
 	});
 	modeSelectWindow.once("close", () => {
 		if (c1) return;
