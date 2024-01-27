@@ -76,8 +76,8 @@ function start() {
 										i.on("done", async () => {
 											require("child_process").execSync(
 												{
-													win32: `${process.env.TEMP}/meteor/update.exe`,
-													darwin: "open /tmp/meteor/update.dmg",
+													win32: `${process.env.TEMP}/meteor/update_ver.${n.tag_name}.exe`,
+													darwin: `open /tmp/meteor/update_ver.${n.tag_name}.dmg`,
 													linux: "",
 												}[process.platform]
 											);
