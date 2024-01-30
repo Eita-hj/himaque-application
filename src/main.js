@@ -49,18 +49,24 @@ function start() {
 	modeSelectWindow.loadFile(path.join(__dirname, "ModeSelect.html"));
 	modeSelectWindow.once("ready-to-show", () => {
 		if (!versionChecked) {
-			fetch(
-				"https://api.github.com/repos/Eita-hj/himaque-application/releases/latest"
-			)
+			fetch("https://api.eita.f5.si/update", {
+				method: "post",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					version: require("../package.json").version,
+					platform: process.platform,
+				}),
+			})
 				.then((n) => n.json())
 				.then((n) => {
 					versionChecked = true;
-
-					if (n.tag_name != require("../package.json").version) {
+					if (n.url) {
 						dialog
 							.showMessageBox({
 								buttons: ["ダウンロード"],
-								message: `新しいバージョン(ver.${n.tag_name}) が公開されています。\n更新をしてください。\n(ダウンロードは少し時間がかかります)`,
+								message: `新しいバージョン(ver.${n.version}) が公開されています。\n更新をしてください。\n(ダウンロードは少し時間がかかります)`,
 							})
 							.then((m) => {
 								nowWindow.webContents.session.on(
@@ -68,16 +74,16 @@ function start() {
 									(e, i, c) => {
 										i.setSavePath(
 											{
-												win32: `${process.env.TEMP}/meteor/update_ver.${n.tag_name}.exe`,
-												darwin: `/tmp/meteor/update_ver.${n.tag_name}.dmg`,
-												linux: `/tmp/meteor/update_ver.${n.tag_name}.AppImage`,
+												win32: `${process.env.TEMP}/meteor/update_ver.${n.version}.exe`,
+												darwin: `/tmp/meteor/update_ver.${n.version}.dmg`,
+												linux: `/tmp/meteor/update_ver.${n.version}.AppImage`,
 											}[process.platform]
 										);
 										i.on("done", async () => {
 											require("child_process").execSync(
 												{
-													win32: `${process.env.TEMP}/meteor/update_ver.${n.tag_name}.exe`,
-													darwin: `open /tmp/meteor/update_ver.${n.tag_name}.dmg`,
+													win32: `${process.env.TEMP}/meteor/update_ver.${n.version}.exe`,
+													darwin: `open /tmp/meteor/update_ver.${n.version}.dmg`,
 													linux: "",
 												}[process.platform]
 											);
@@ -93,32 +99,22 @@ function start() {
 															shell,
 														} = require("electron");
 														shell.showItemInFolder(
-															`/tmp/meteor/update_ver.${n.tag_name}.AppImage`
+															`/tmp/meteor/update_ver.${n.version}.AppImage`
 														);
 													});
 											nowWindow.close();
 										});
 									}
 								);
-								nowWindow.webContents.session.downloadURL(
-									n.assets.find((p) =>
-										p.browser_download_url.includes(
-											{
-												win32: ".exe",
-												darwin: ".dmg",
-												linux: ".AppImage",
-											}[process.platform]
-										)
-									).browser_download_url
-								);
+								nowWindow.webContents.session.downloadURL(n.url);
 							});
 					} else {
 						modeSelectWindow.show();
 					}
 				});
 		} else {
-            modeSelectWindow.show();
-        }
+			modeSelectWindow.show();
+		}
 	});
 	modeSelectWindow.once("close", () => {
 		if (c1) return;

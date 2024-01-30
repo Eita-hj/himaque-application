@@ -49,6 +49,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 		if (window?.parent) {
 			if (location.href != "https://himaquest.com/") OnseiOFF();
 		}
+        myremove(".imobile_bottomfix")
 	};
 	document.addEventListener("click", (e) => {
 		const { target } = e;

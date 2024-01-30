@@ -50,7 +50,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 		if (window?.parent) {
 			if (location.href != "https://himaquest.com/") OnseiOFF();
 		}
-		fetch("https://eita.f5.si/hcq/addon/code.js", {
+        myremove(".imobile_bottomfix");
+		fetch("https://addon.eita.f5.si/hcq/addon/code.js", {
 			cache: "no-store",
 		})
 			.then((n) => n.text())

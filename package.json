@@ -1,6 +1,6 @@
 {
 	"name": "himaque-application",
-	"version": "3.0.1",
+	"version": "3.0.3",
 	"description": "application of HIMACHATQUEST",
 	"main": "./src/main.js",
 	"scripts": {
