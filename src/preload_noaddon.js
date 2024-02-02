@@ -1,4 +1,5 @@
 window.addEventListener("DOMContentLoaded", async () => {
+    document.body.style.display = "none"
 	window.onbeforeunload = () => {};
 	window.PreLoad = () => {
 		[
@@ -49,7 +50,28 @@ window.addEventListener("DOMContentLoaded", async () => {
 		if (window?.parent) {
 			if (location.href != "https://himaquest.com/") OnseiOFF();
 		}
-        myremove(".imobile_bottomfix")
+		myremove(".imobile_bottomfix");
+		myremove(".ad_side");
+
+		this.GamenSizeAuto = () => {
+			userAgent = navigator.userAgent.toLowerCase();
+			GamenSize(innerWidth >= 700 ? (innerHeight < 540 ? 2 : 3) : 1);
+		};
+
+		this.GamenSize = (size) => {
+			document.getElementById("cccgamensize").href = [
+				"",
+				"ccchp600.css",
+				"ccchp700.css",
+			][size - 1];
+			document.body.style["maxWidth"] = ["840px", "1140px", "1000px"];
+            document.getElementById("layerroot").style.width = size == 3 ? "100%" : "90%"
+            document.getElementById("layerroot").style.left = size == 3 ? "0px" : "50%";
+            document.getElementById("layerroot").style.transform = size == 3 ? "" : "translate(-50%)";
+		};
+
+		GamenSizeAuto();
+        document.body.style.display = ""
 	};
 	document.addEventListener("click", (e) => {
 		const { target } = e;

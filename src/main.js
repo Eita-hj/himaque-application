@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
 const path = require("path");
 let c1 = 0,
 	c2 = 0;
+
+let isMainWindow = false;
 const beforeSetting = {
 	windowCount: 1,
 	addon: false,
@@ -17,12 +19,23 @@ app.setAboutPanelOptions({
 });
 
 const fetch = require("node-fetch");
+const { truncate } = require("fs");
 let versionChecked = false;
 
 app.once("ready", () => {
 	ipcMain.on("ready", (e) => {
 		return (e.returnValue = beforeSetting);
 	});
+	const { readdirSync, unlink } = require("fs");
+	const p = {
+		win32: `${process.env.TEMP}/meteor`,
+		darwin: `/tmp/meteor`,
+		linux: `/tmp/meteor`,
+	}[process.platform];
+	const files = readdirSync(p)
+		.filter((n) => n.startsWith("update_"))
+		.map((n) => `${p}/${n}`);
+	files.map((n) => unlink(n, () => {}));
 });
 
 let mainWindow = null;
@@ -106,10 +119,13 @@ function start() {
 										});
 									}
 								);
-								nowWindow.webContents.session.downloadURL(n.url);
+								nowWindow.webContents.session.downloadURL(
+									n.url
+								);
 							});
 					} else {
 						modeSelectWindow.show();
+
 					}
 				});
 		} else {
@@ -156,8 +172,10 @@ function start() {
 		mainWindow.loadURL(url);
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
+			isMainWindow = true;
 		});
 		mainWindow.on("close", () => {
+			isMainWindow = false;
 			if (c2) return;
 			if (process.platform === "darwin") return;
 			app.exit();
@@ -208,6 +226,7 @@ const templateMenu = [
 			{
 				label: "窓数・アドオン有無の切り替え",
 				click(item, focusedWindow) {
+					if (!isMainWindow) return;
 					if (focusedWindow) {
 						c2 = 1;
 						focusedWindow.close();

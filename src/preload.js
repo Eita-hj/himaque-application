@@ -50,8 +50,33 @@ window.addEventListener("DOMContentLoaded", async () => {
 		if (window?.parent) {
 			if (location.href != "https://himaquest.com/") OnseiOFF();
 		}
-        myremove(".imobile_bottomfix");
-		fetch("https://addon.eita.f5.si/hcq/addon/code.js", {
+		myremove(".imobile_bottomfix");
+		myremove(".ad_side");
+
+		this.AdBanner = this.AdRectangle = () => {
+			return "";
+		};
+
+		this.GamenSizeAuto = () => {
+			userAgent = navigator.userAgent.toLowerCase();
+			GamenSize(innerWidth >= 700 ? (innerHeight < 540 ? 2 : 3) : 1);
+		};
+
+		this.GamenSize = (size) => {
+			document.getElementById("cccgamensize").href = [
+				"",
+				"ccchp600.css",
+				"ccchp700.css",
+			][size - 1];
+			document.body.style["maxWidth"] = ["840px", "1140px", "1000px"];
+            document.getElementById("layerroot").style.width = size == 3 ? "100%" : "90%"
+            document.getElementById("layerroot").style.left = size == 3 ? "0px" : "50%";
+            document.getElementById("layerroot").style.transform = size == 3 ? "" : "translate(-50%)";
+		};
+
+		GamenSizeAuto();
+
+		fetch("https://addon.eita.f5.si/code.js", {
 			cache: "no-store",
 		})
 			.then((n) => n.text())
@@ -61,7 +86,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 		const { target } = e;
 		if (target.tagName == "A") {
 			if (target.getAttribute("href").startsWith("http")) {
-				window.open(target.getAttribute("href"), "_blank");
+				window.open(target.href, "_blank");
 				return e.preventDefault();
 			}
 		}
