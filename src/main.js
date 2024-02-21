@@ -26,16 +26,18 @@ app.once("ready", () => {
 	ipcMain.on("ready", (e) => {
 		return (e.returnValue = beforeSetting);
 	});
-	const { readdirSync, unlink } = require("fs");
+	const { existsSync, readdirSync, unlink } = require("fs");
 	const p = {
 		win32: `${process.env.TEMP}/meteor`,
 		darwin: `/tmp/meteor`,
 		linux: `/tmp/meteor`,
 	}[process.platform];
-	const files = readdirSync(p)
-		.filter((n) => n.startsWith("update_"))
-		.map((n) => `${p}/${n}`);
-	files.map((n) => unlink(n, () => {}));
+	if (existsSync(p)) {
+		const files = readdirSync(p)
+			.filter((n) => n.startsWith("update_"))
+			.map((n) => `${p}/${n}`);
+		files.map((n) => unlink(n, () => {}));
+	}
 });
 
 let mainWindow = null;
@@ -125,7 +127,6 @@ function start() {
 							});
 					} else {
 						modeSelectWindow.show();
-
 					}
 				});
 		} else {
