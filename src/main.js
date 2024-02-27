@@ -19,7 +19,6 @@ app.setAboutPanelOptions({
 });
 
 const fetch = require("node-fetch");
-const { truncate } = require("fs");
 let versionChecked = false;
 
 app.once("ready", () => {
@@ -72,6 +71,7 @@ function start() {
 				body: JSON.stringify({
 					version: require("../package.json").version,
 					platform: process.platform,
+                    application: "Meteor"
 				}),
 			})
 				.then((n) => n.json())
