@@ -1,7 +1,16 @@
 window.addEventListener("DOMContentLoaded", async () => {
-    document.body.style.display = "none"
+	if (
+		!new URL(location.href).origin.includes("himaquest.com")
+	)
+		return;
+
+
+	document.body.style.display = "none";
+	let _tmp = {};
+	_tmp = setTimeout(() => location.reload(), 1500);
 	window.onbeforeunload = () => {};
 	window.PreLoad = () => {
+		clearTimeout(_tmp);
 		[
 			...document
 				.getElementsByClassName("orenosakuhin")[0]
@@ -23,11 +32,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 		]
 			.filter((n) => n.parentNode.id == "page_login")
 			.at(-3).innerHTML = "";
-		const autologin = Number(GetCookie("autologin")) || 0;
+		const autologin = Number(GetCookie("autologin") || 0);
 		if (autologin) LoginGameCookie();
-		otoflg = bgmflg = Number(GetCookie("otoflg")) || 1;
-		effectflg = Number(GetCookie("effectflg")) || 0;
-		masumeflg = Number(GetCookie("masumeflg")) || 0;
+		otoflg = Number(GetCookie("otoflg") || 1);
+		bgmflg = Number(GetCookie("bgmflg") || 1);
+		effectflg = Number(GetCookie("effectflg") || 0);
+		masumeflg = Number(GetCookie("masumeflg") || 0);
 		MasumeSet();
 		ecoflg = Number(GetCookie("ecoflg")) || 0;
 		if (window.HTMLAudioElement) {
@@ -47,11 +57,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 				"#FFFF00";
 			document.getElementById("oto_ari").style["background-color"] = "";
 		}
-		if (window?.parent) {
-			if (location.href != "https://himaquest.com/") OnseiOFF();
-		}
+		if (location.href != "https://himaquest.com/") OnseiOFF();
+
 		myremove(".imobile_bottomfix");
 		myremove(".ad_side");
+
+		this.AdBanner = this.AdRectangle = () => {
+			return "";
+		};
 
 		this.GamenSizeAuto = () => {
 			userAgent = navigator.userAgent.toLowerCase();
@@ -65,13 +78,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 				"ccchp700.css",
 			][size - 1];
 			document.body.style["maxWidth"] = ["840px", "1140px", "1000px"];
-            document.getElementById("layerroot").style.width = size == 3 ? "100%" : "90%"
-            document.getElementById("layerroot").style.left = size == 3 ? "0px" : "50%";
-            document.getElementById("layerroot").style.transform = size == 3 ? "" : "translate(-50%)";
+			document.getElementById("layerroot").style.width =
+				size == 3 ? "100%" : "90%";
+			document.getElementById("layerroot").style.left =
+				size == 3 ? "0px" : "50%";
+			document.getElementById("layerroot").style.transform =
+				size == 3 ? "" : "translate(-50%)";
 		};
 
 		GamenSizeAuto();
-        document.body.style.display = ""
+		document.body.style.display = "";
 	};
 	document.addEventListener("click", (e) => {
 		const { target } = e;

@@ -6,7 +6,7 @@
 		<meta http-equiv="Content-Script-Type" content="text/javascript" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="shortcut icon" href="/favicon.ico" />
-		<title>選択画面</title>
+		<title>設定画面</title>
 		<style>
 			html {
 				background-color: #f0feff;
@@ -40,16 +40,40 @@
 		<h1>モードを選択してください。</h1>
 		<h2>アドオン</h2>
 		<p>
-			<label><input type="radio" name="addon" value="true" />あり</label
-			>　<label
+			<label
+				onclick="document.getElementById('addonType').style.display = ''"
+				><input type="radio" name="addon" value="true" />あり</label
+			>&emsp;<label
 				><input
 					type="radio"
 					name="addon"
 					value="false"
+					onclick="document.getElementById('addonType').style.display = 'none'"
 					checked
 				/>なし</label
 			>
 		</p>
+		<div id="addonType" style="display: none;">
+			<h2>使用アドオン選択</h2>
+			<p>
+				<label
+					><input
+						type="checkbox"
+						id="mainaddon"
+						checked
+						disabled
+					/> メインアドオン</label
+				>
+			</p>
+			<p>
+				<label
+					><input
+						type="checkbox"
+						id="multilinechataddon"
+					/> 複数行チャットアドオン</label
+				>
+			</p>
+		</div>
 		<h2>窓数(1～10)</h2>
 		<select id="window" onchange="WindowChange(this.value)">
 			<option value="1" selected>1窓</option>

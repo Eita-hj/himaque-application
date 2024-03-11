@@ -1,6 +1,6 @@
 {
 	"name": "himaque-application",
-	"version": "3.1.0",
+	"version": "4.0.0",
 	"description": "application of HIMACHATQUEST",
 	"main": "./src/main.js",
 	"scripts": {
@@ -11,6 +11,7 @@
 		"build-all": "electron-builder -wml"
 	},
 	"dependencies": {
+		"electron-store": "^8.2.0",
 		"node-fetch": "^2.7.0"
 	},
 	"devDependencies": {
@@ -53,5 +54,5 @@
 		"publish": null
 	},
 	"author": "eita(No.16762) <sgr.9661.ea@gmail.com>",
-	"homepage": "https://eita.f5.si/hcq/"
+	"homepage": "https://addon.eita.f5.si/"
 }

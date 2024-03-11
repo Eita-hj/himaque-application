@@ -1,13 +1,20 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, dialog, session } = require("electron");
 const path = require("path");
 let c1 = 0,
 	c2 = 0;
 
 let isMainWindow = false;
-const beforeSetting = {
+
+const Store = require("electron-store");
+const store = new Store();
+
+const beforeSetting = store.get("setting") || {
 	windowCount: 1,
 	addon: false,
 	more_setting: "a",
+	addonModules: {
+		multilinechat: false
+	}
 };
 
 app.setAboutPanelOptions({
@@ -15,7 +22,7 @@ app.setAboutPanelOptions({
 	applicationVersion: require("../package.json").version,
 	copyright: "©︎マグナム中野 (HIMACHATQUEST) えいた(addon)",
 	authors: "マグナム中野、えいた",
-	website: "https://eita.f5.si/hcq/",
+	website: "https://addon.eita.f5.si/",
 });
 
 const fetch = require("node-fetch");
@@ -71,7 +78,7 @@ function start() {
 				body: JSON.stringify({
 					version: require("../package.json").version,
 					platform: process.platform,
-                    application: "Meteor"
+					application: "Meteor",
 				}),
 			})
 				.then((n) => n.json())
@@ -156,7 +163,7 @@ function start() {
 					obj.addon ? "preload.js" : "preload_noaddon.js"
 				),
 				contextIsolation: false,
-				nodeIntegrationInSubFrames: true,
+				nodeIntegrationInSubFrames: obj.windowCount == 1 ? false : true,
 				allowRunningInsecureContent: true,
 			},
 		});
@@ -164,12 +171,13 @@ function start() {
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
 		beforeSetting.type = obj?.type || "a";
+		const hash = obj.addon ? `#multilinechat=${obj.addonModules.multilinechat}` : ""
 		const url =
-			obj.windowCount == 1
+			(obj.windowCount == 1
 				? "https://himaquest.com/"
 				: obj?.type == "a"
 				? `http://sub.eita.f5.si/HIMAQUESTx${obj.windowCount}`
-				: `http://sub.eita.f5.si/HIMACHATQUESTx${obj.windowCount}`;
+				: `http://sub.eita.f5.si/HIMACHATQUESTx${obj.windowCount}`) + hash;
 		mainWindow.loadURL(url);
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
@@ -186,6 +194,10 @@ function start() {
 		});
 	});
 }
+
+app.on("quit", () => {
+	store.set("setting", beforeSetting)
+})
 
 const templateMenu = [
 	...(process.platform == "darwin"
