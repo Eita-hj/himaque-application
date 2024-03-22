@@ -7,7 +7,8 @@ function send() {
 	if (["2", "3", "4"].includes(obj.windowCount))
 		obj.type = document.getElementById("windowtype").value;
 	obj.addonModules = {
-		multilinechat: document.getElementById("multilinechataddon").checked
+		multilinechat: document.getElementById("multilinechataddon").checked,
+		chatmaxup: document.getElementById("chatmaxupaddon").checked
 	}
 	window.electronAPI.start(obj);
 }
@@ -23,4 +24,5 @@ function ready() {
 		document.getElementById("windowtype").value = n.type;
 	document.getElementById('addonType').style.display = n.addon ? "" : "none"
 	document.getElementById("multilinechataddon").checked = !!n.addonModules?.multilinechat
+	document.getElementById("chatmaxupaddon").checked = !!n.addonModules?.chatmaxup
 }

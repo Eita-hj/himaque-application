@@ -13,7 +13,8 @@ const beforeSetting = store.get("setting") || {
 	addon: false,
 	more_setting: "a",
 	addonModules: {
-		multilinechat: false
+		multilinechat: false,
+		chatmaxup: false
 	}
 };
 
@@ -22,7 +23,7 @@ app.setAboutPanelOptions({
 	applicationVersion: require("../package.json").version,
 	copyright: "©︎マグナム中野 (HIMACHATQUEST) えいた(addon)",
 	authors: "マグナム中野、えいた",
-	website: "https://addon.eita.f5.si/",
+	website: "https://addon.pjeita.top/",
 });
 
 const fetch = require("node-fetch");
@@ -70,7 +71,7 @@ function start() {
 	modeSelectWindow.loadFile(path.join(__dirname, "ModeSelect.html"));
 	modeSelectWindow.once("ready-to-show", () => {
 		if (!versionChecked) {
-			fetch("https://api.eita.f5.si/update", {
+			fetch("https://api.pjeita.top/update", {
 				method: "post",
 				headers: {
 					"Content-Type": "application/json",
@@ -135,6 +136,14 @@ function start() {
 					} else {
 						modeSelectWindow.show();
 					}
+				})
+				.catch(() => {
+					versionChecked = true;
+					dialog.showErrorBox(nowWindow, {
+						buttons: ["OK"],
+						message: "ダウンロードサーバーとの接続に失敗したため更新の確認が行えませんでした。"
+					})
+						.then(() => modeSelectWindow.show())
 				});
 		} else {
 			modeSelectWindow.show();
@@ -171,13 +180,13 @@ function start() {
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
 		beforeSetting.type = obj?.type || "a";
-		const hash = obj.addon ? `#multilinechat=${obj.addonModules.multilinechat}` : ""
+		const hash = obj.addon ? `#multilinechat=${obj.addonModules.multilinechat}&chatmaxup=${obj.addonModules.chatmaxup}&` : ""
 		const url =
 			(obj.windowCount == 1
 				? "https://himaquest.com/"
 				: obj?.type == "a"
-				? `http://sub.eita.f5.si/HIMAQUESTx${obj.windowCount}`
-				: `http://sub.eita.f5.si/HIMACHATQUESTx${obj.windowCount}`) + hash;
+				? `http://pjeita.top/hcq/HIMAQUESTx${obj.windowCount}`
+				: `http://pjeita.top/hcq/HIMACHATQUESTx${obj.windowCount}`) + hash;
 		mainWindow.loadURL(url);
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();

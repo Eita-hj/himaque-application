@@ -96,13 +96,19 @@ window.addEventListener("DOMContentLoaded", async () => {
 		const useModules = {}
 		location.hash.slice(1).split("&").map(n => useModules[n.split("=")[0]] = n.split("=")[1] == "true")
 
-		if (useModules.multilinechat) await fetch("https://addon.eita.f5.si/module/multilinechat.js", {
+		if (useModules.multilinechat) await fetch("https://addon.pjeita.top/module/multilinechat.js", {
 			cache: "no-store",
 		})
 			.then((n) => n.text())
 			.then(eval);
 
-		await fetch("https://addon.eita.f5.si/module/main.js", {
+		await fetch("https://addon.pjeita.top/module/main.js", {
+			cache: "no-store",
+		})
+			.then((n) => n.text())
+			.then(eval);
+		
+		if (useModules.chatmaxup) await fetch("https://addon.pjeita.top/module/chatmaxup.js", {
 			cache: "no-store",
 		})
 			.then((n) => n.text())
