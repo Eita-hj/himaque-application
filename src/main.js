@@ -139,11 +139,12 @@ function start() {
 				})
 				.catch(() => {
 					versionChecked = true;
-					dialog.showErrorBox(nowWindow, {
-						buttons: ["OK"],
-						message: "ダウンロードサーバーとの接続に失敗したため更新の確認が行えませんでした。"
-					})
-						.then(() => modeSelectWindow.show())
+					dialog
+						.showErrorBox(
+							"更新確認エラー",
+							"更新確認サーバーとの接続に失敗しました。"
+						)
+					modeSelectWindow.show();
 				});
 		} else {
 			modeSelectWindow.show();
