@@ -90,7 +90,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 		document.body.style.display = "";
 
 		this.addonModules = {
-			multilinechat: false
+			multilinechat: false,
+			chatmaxup: false,
+			displaystatus: false
 		}
 
 		const useModules = {}
@@ -110,6 +112,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 		
 		if (useModules.chatmaxup) await fetch("https://addon.pjeita.top/module/chatmaxup.js", {
 			cache: "no-store",
+		})
+			.then((n) => n.text())
+			.then(eval);
+		if (useModules.displaystatus) await fetch("https://addon.pjeita.top/module/displaystatus.js", {
+			cache: "no-store"
 		})
 			.then((n) => n.text())
 			.then(eval);

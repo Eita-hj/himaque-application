@@ -181,7 +181,7 @@ function start() {
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
 		beforeSetting.type = obj?.type || "a";
-		const hash = obj.addon ? `#multilinechat=${obj.addonModules.multilinechat}&chatmaxup=${obj.addonModules.chatmaxup}&` : ""
+		const hash = obj.addon ? `#multilinechat=${obj.addonModules.multilinechat}&chatmaxup=${obj.addonModules.chatmaxup}&displaystatus=${obj.addonModules.displaystatus}&` : ""
 		const url =
 			(obj.windowCount == 1
 				? "https://himaquest.com/"
