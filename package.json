@@ -1,22 +1,22 @@
 {
 	"name": "himaque-application",
-	"version": "4.1.2",
+	"version": "4.3.0",
 	"description": "application of HIMACHATQUEST",
 	"main": "./src/main.js",
 	"scripts": {
 		"start": "electron ./src",
-		"build-mac": "electron-builder -m",
+		"build-mac": "electron-builder -m --univarsal",
 		"build-win": "electron-builder -w --x64",
 		"build-linux": "electron-builder -l",
 		"build-all": "electron-builder -wml"
 	},
 	"dependencies": {
-		"electron-store": "^8.2.0",
+		"electron-store": "^10.x",
 		"node-fetch": "^2.7.0"
 	},
 	"devDependencies": {
-		"electron": "^28.1.4",
-		"electron-builder": "^24.9.1"
+		"electron": "^35.x",
+		"electron-builder": "^26.x"
 	},
 	"build": {
 		"appId": "electron.himaqueapp.meteor",
