@@ -5,7 +5,7 @@ let c1 = 0,
 
 let isMainWindow = false;
 
-const Store = require("electron-store");
+const Store = require("electron-store").default;
 const store = new Store();
 
 const beforeSetting = store.get("setting") || {
