@@ -122,10 +122,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 			},
 			success: function (response) {
 				wait_LoginGame = false;
-				if (response.e == 404) return Error404();
-				if (response.e == 2)
-					return $("#logingame_alerttext").text(response.str);
-				if (response.e != 1) return alert("サーバエラー0628");
+				if (response.error == 404) return Error404();
+				if (response.error == 2)	
+					return olert(response.str);
+				if (response.error != 1) return alert("サーバエラー0628");
 				LoginGameNakami(response);
 				CookieSet("autologin", autologin ? 1 : 0);
 				CookieSet("cid", fid || 0);
@@ -167,12 +167,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 			success: function (response) {
 				wait_LoginGame = false;
 				$("#logingame_alerttext").html("");
-				if (response.e == 404) return Error404();
-				if (response.e == 30) {
+				if (response.error == 404) return Error404();
+				if (response.error == 30) {
 					AutoLoginKaizyo();
 					return $("#loginformid").val(cid);
 				}
-				if (response.e != 1) {
+				if (response.error != 1) {
 					alert("自動ログインに失敗しました");
 					return AutoLoginKaizyo();
 				}
