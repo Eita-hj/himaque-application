@@ -11,11 +11,11 @@
 		"build-all": "electron-builder -wml"
 	},
 	"dependencies": {
-		"electron-store": "^10.x",
+		"electron-store": "8.x",
 		"node-fetch": "^2.7.0"
 	},
 	"devDependencies": {
-		"electron": "28",
+		"electron": "^28.3.3",
 		"electron-builder": "^26.x"
 	},
 	"build": {
