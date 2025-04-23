@@ -15,7 +15,7 @@
 		"node-fetch": "^2.7.0"
 	},
 	"devDependencies": {
-		"electron": "^35.x",
+		"electron": "28",
 		"electron-builder": "^26.x"
 	},
 	"build": {
