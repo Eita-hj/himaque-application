@@ -2,4 +2,4 @@ dist/
 src/hcq_script.js
 node_modules/
 yarn.lock
-.github
+.github/
