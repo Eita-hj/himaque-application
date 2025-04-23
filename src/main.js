@@ -97,7 +97,7 @@ function start() {
 									(e, i, c) => {
 										i.setSavePath(
 											{
-												win32: `${process.env.TEMP}/meteor/update_ver.${n.version}.exe`,
+												win32: `${process.env.TEMP}\\meteor\\update_ver.${n.version}.exe`,
 												darwin: `/tmp/meteor/update_ver.${n.version}.dmg`,
 												linux: `/tmp/meteor/update_ver.${n.version}.AppImage`,
 											}[process.platform]
@@ -105,7 +105,7 @@ function start() {
 										i.on("done", async () => {
 											require("child_process").execSync(
 												{
-													win32: `${process.env.TEMP}/meteor/update_ver.${n.version}.exe`,
+													win32: `${process.env.TEMP}\\meteor\\update_ver.${n.version}.exe`,
 													darwin: `open /tmp/meteor/update_ver.${n.version}.dmg`,
 													linux: "",
 												}[process.platform]
