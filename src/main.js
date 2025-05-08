@@ -4,7 +4,6 @@ const {
 	ipcMain,
 	Menu,
 	dialog,
-	session,
 } = require("electron");
 const path = require("path");
 let c1 = 0,
@@ -15,7 +14,20 @@ let isMainWindow = false;
 const Store = require("electron-store").default;
 const store = new Store();
 
-//const { autoUpdater } = require("electron-updater");
+const { autoUpdater } = require("electron-updater");
+
+autoUpdater.on("update-available", () => {
+	autoUpdater.downloadUpdate().then(() => {
+		dialog.showMessageBox({
+			buttons: ["OK"],
+			message:
+				"新しいバージョンが公開されています。\nダウンロード終了後、再起動します。\n(ダウンロードは少し時間がかかります)",
+		});
+	});
+});
+autoUpdater.on("update-downloaded", (info) => {
+	autoUpdater.quitAndInstall();
+});
 const state = {
 	use: {
 		exitField: false,
@@ -24,8 +36,8 @@ const state = {
 	links: {
 		exitField: [],
 		partyReady: [],
-	}
-}
+	},
+};
 
 const beforeSetting = store.get("setting") || {
 	windowCount: 1,
@@ -48,8 +60,7 @@ app.setAboutPanelOptions({
 	website: "https://addon.pjeita.top/",
 });
 
-const fetch = require("node-fetch");
-let versionChecked = false;
+let versionChecked = !app.isPackaged;
 
 app.once("ready", () => {
 	ipcMain.on("ready", (e) => {
@@ -108,27 +119,62 @@ const createServer_and_start = async () => {
 		events.reload = [];
 		return;
 	});
+	s.post("/events", (req, res) => {
+		const { type } = req.body;
+		if (type == "exitField") {
+			state.use.exitField = true;
+			state.links.exitField.length = 0;
+			setTimeout(() => {
+				state.use.exitField = false;
+				state.links.exitField.length = 0;
+			}, 1500);
+		} else if (type == "partyReady") {
+			state.use.partyReady = true;
+			state.links.partyReady.length = 0;
+			setTimeout(() => {
+				state.use.partyReady = false;
+				state.links.partyReady.length = 0;
+			}, 1500);
+		}
+		res.json({});
+	});
+	ipcMain.on("exitField", (e, d) => {
+		state.use.exitField = true;
+		state.links.exitField.length = 0;
+		setTimeout(() => {
+			state.use.exitField = false;
+			state.links.exitField.length = 0;
+		}, 1500);
+	});
+	ipcMain.on("partyReady", (e, d) => {
+		state.use.partyReady = true;
+		state.links.partyReady.length = 0;
+		setTimeout(() => {
+			state.use.partyReady = false;
+			state.links.partyReady.length = 0;
+		}, 1500);
+	});
 	ipcMain.on("tabAdd", () => {
 		if (beforeSetting.mode == "window") return;
 		events.add = true;
-	})
+	});
 	ipcMain.on("tabClose", (e, d) => {
 		if (beforeSetting.mode == "window") return;
 		const { url } = d;
 		events.close.push(url);
-	})
+	});
 	ipcMain.on("tabChange", (e, d) => {
 		if (beforeSetting.mode == "window") return;
 		events[d.reverse ? "change2" : "change"] = true;
-	})
+	});
 	ipcMain.on("tabReload", (e, d) => {
 		if (beforeSetting.mode == "window") return;
 		const { url } = d;
 		events.reload.push(url);
-	})
+	});
 	ipcMain.handle("state", (e, d) => {
 		const { url } = d;
-		const returnValue = {}
+		const returnValue = {};
 		if (state.use.exitField) {
 			if (!state.links.exitField.includes(url)) {
 				state.links.exitField.push(url);
@@ -139,10 +185,10 @@ const createServer_and_start = async () => {
 			if (!state.links.partyReady.includes(url)) {
 				state.links.partyReady.push(url);
 				returnValue.partyReady = true;
-			};
+			}
 		}
 		return returnValue;
-	})
+	});
 	s.on("error", (err) => {
 		if (err.code === "EADDRINUSE") {
 			port++;
@@ -154,8 +200,21 @@ const createServer_and_start = async () => {
 	});
 };
 createServer_and_start(server);
+app.on("ready", () => {
+	if (!versionChecked) autoUpdater.checkForUpdatesAndNotify();
+	start()
+});
 
-app.on("ready", start);
+autoUpdater.on("update-not-available", () => {
+	versionChecked = true;
+});
+autoUpdater.on("update-cancelled", () => {
+	versionChecked = true;
+});
+autoUpdater.on("error", () => {
+	versionChecked = true;
+});
+
 function start() {
 	mainWindow = null;
 	c2 = 0;
@@ -175,83 +234,18 @@ function start() {
 	});
 	modeSelectWindow.loadFile(path.join(__dirname, "ModeSelect.html"));
 	modeSelectWindow.once("ready-to-show", () => {
-		if (!versionChecked) {
-			fetch("https://api.pjeita.top/update", {
-				method: "post",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					version: require("../package.json").version,
-					platform: process.platform,
-					application: "Meteor",
-				}),
-			})
-				.then((n) => n.json())
-				.then((n) => {
-					versionChecked = true;
-					if (n.url) {
-						dialog
-							.showMessageBox({
-								buttons: ["ダウンロード"],
-								message: `新しいバージョン(ver.${n.version}) が公開されています。\n更新をしてください。\n(ダウンロードは少し時間がかかります)`,
-							})
-							.then((m) => {
-								nowWindow.webContents.session.on(
-									"will-download",
-									(e, i, c) => {
-										i.setSavePath(
-											{
-												win32: `${process.env.TEMP}\\meteor\\update_ver.${n.version}.exe`,
-												darwin: `/tmp/meteor/update_ver.${n.version}.dmg`,
-												linux: `/tmp/meteor/update_ver.${n.version}.AppImage`,
-											}[process.platform]
-										);
-										i.on("done", async () => {
-											require("child_process").execSync(
-												{
-													win32: `${process.env.TEMP}\\meteor\\update_ver.${n.version}.exe`,
-													darwin: `open /tmp/meteor/update_ver.${n.version}.dmg`,
-													linux: "",
-												}[process.platform]
-											);
-											if (process.platform == "linux")
-												await dialog
-													.showMessageBox(nowWindow, {
-														buttons: ["OK"],
-														message:
-															"ダウンロードをしました。新しいバージョンのファイルを開いて起動してください。",
-													})
-													.then(() => {
-														const {
-															shell,
-														} = require("electron");
-														shell.showItemInFolder(
-															`/tmp/meteor/update_ver.${n.version}.AppImage`
-														);
-													});
-											nowWindow.close();
-										});
-									}
-								);
-								nowWindow.webContents.session.downloadURL(
-									n.url
-								);
-							});
-					} else {
-						modeSelectWindow.show();
-					}
-				})
-				.catch(() => {
-					versionChecked = true;
-					dialog.showErrorBox(
-						"更新確認エラー",
-						"更新確認サーバーとの接続に失敗しました。"
-					);
-					modeSelectWindow.show();
-				});
-		} else {
+		if (versionChecked) {
 			modeSelectWindow.show();
+		} else {
+			autoUpdater.on("update-not-available", () => {
+				modeSelectWindow.show();
+			});
+			autoUpdater.on("update-cancelled", () => {
+				modeSelectWindow.show();
+			});
+			autoUpdater.on("error", () => {
+				modeSelectWindow.show();
+			});
 		}
 	});
 	modeSelectWindow.once("close", () => {
@@ -285,16 +279,15 @@ function start() {
 			},
 		});
 		nowWindow = mainWindow;
-		
+
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
 		beforeSetting.type = obj?.type || "a";
-		beforeSetting.addonModules = obj.addonModules
+		beforeSetting.addonModules = obj.addonModules;
 		beforeSetting.mode = obj.mode;
 
-		s = tempServer.listen(
-			16762,
-			() => mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`))
+		s = tempServer.listen(16762, () =>
+			mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`))
 		);
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
@@ -313,12 +306,12 @@ function start() {
 }
 
 ipcMain.on("startgame", (e) => {
-	return e.returnValue = {
+	return (e.returnValue = {
 		port,
 		addonModules: Number(beforeSetting.addonModules),
 		type: beforeSetting.type,
-	}
-})
+	});
+});
 
 app.on("quit", () => {
 	store.set("setting", beforeSetting);
@@ -385,9 +378,9 @@ const templateMenu = [
 						state.use.partyReady = true;
 						state.links.partyReady.length = 0;
 						setTimeout(() => {
-							state.use.partyReady = false
+							state.use.partyReady = false;
 							state.links.partyReady.length = 0;
-						}, 1500)
+						}, 1500);
 					}
 				},
 			},
@@ -399,9 +392,9 @@ const templateMenu = [
 						state.use.exitField = true;
 						state.links.exitField.length = 0;
 						setTimeout(() => {
-							state.use.exitField = false
+							state.use.exitField = false;
 							state.links.exitField.length = 0;
-						}, 1500)
+						}, 1500);
 					}
 				},
 			},
