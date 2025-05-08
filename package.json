@@ -59,7 +59,7 @@
 				{
 					"target": "pkg",
 					"arch": [
-						"univarsal"
+						"universal"
 					]
 				}
 			]
