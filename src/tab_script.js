@@ -199,6 +199,26 @@
 				.attr("src", hcqLinks.find((n) => n.id == id).url);
 			return;
 		}
+		if ((e.ctrlKey && e.key === "s") || e.key === "F1") {
+			e.preventDefault();
+			return fetch(`http://localhost:${port}/events`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ type: "partyReady" }),
+			})
+		}
+		if ((e.ctrlKey && e.key === "b") || e.key === "F2") {
+			e.preventDefault();
+			return fetch(`http://localhost:${port}/events`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ type: "exitField" }),
+			})
+		}
 	};
 	$(document).on("keydown", f.keydownEvent);
 	f.tabAdd();
