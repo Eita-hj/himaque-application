@@ -14,6 +14,7 @@
 	"dependencies": {
 		"cors": "^2.8.5",
 		"electron-store": "8.x",
+		"electron-updater": "^6.6.2",
 		"express": "^5.1.0",
 		"node-fetch": "^2.7.0"
 	},
@@ -81,11 +82,11 @@
 		},
 		"publish": [
 			{
-			  "provider": "github",
-			  "owner": "noir-chat-9661",
-			  "repo": "himaque-application"
+				"provider": "github",
+				"owner": "noir-chat-9661",
+				"repo": "himaque-application"
 			}
-		  ]
+		]
 	},
 	"author": "eita(No.16762) <sgr.9661.ea@gmail.com>",
 	"homepage": "https://addon.pjeita.top/"
