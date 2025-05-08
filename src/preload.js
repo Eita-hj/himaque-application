@@ -1,6 +1,7 @@
 window.addEventListener("DOMContentLoaded", async () => {
 	if (!new URL(location.href).origin.includes("himaquest.com")) return;
 
+	const { ipcRenderer } = require("electron");
 	document.body.style.display = "none";
 	let _tmp = {};
 	_tmp = setTimeout(() => location.reload(), 1500);
@@ -92,15 +93,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 			displaystatus: false,
 		};
 
-		const useModules = {};
-		location.hash
-			.slice(1)
-			.split("&")
-			.map(
-				(n) => (useModules[n.split("=")[0]] = n.split("=")[1] == "true")
-			);
+		const { addonModules } = ipcRenderer.sendSync("startgame");
+		
+		ipcRenderer.on("exitfield", () => {
+			console.log("called")
+			ExitField()
+		});
 
-		if (useModules.multilinechat)
+		if (addonModules.multilinechat)
 			await fetch("https://addon.pjeita.top/module/multilinechat.js", {
 				cache: "no-store",
 			})
@@ -113,19 +113,21 @@ window.addEventListener("DOMContentLoaded", async () => {
 			.then((n) => n.text())
 			.then(eval);
 
-		if (useModules.chatmaxup)
+		if (addonModules.chatmaxup)
 			await fetch("https://addon.pjeita.top/module/chatmaxup.js", {
 				cache: "no-store",
 			})
 				.then((n) => n.text())
 				.then(eval);
-		if (useModules.displaystatus)
+		if (addonModules.displaystatus)
 			await fetch("https://addon.pjeita.top/module/displaystatus.js", {
 				cache: "no-store",
 			})
 				.then((n) => n.text())
 				.then(eval);
 	};
+	const h =
+		'\n++\t<div+id="topad_top"></div>\n\x3C!--+admax+-->\n<div+class="admax-switch"+data-admax-id="97bbe8a54d9e077bdb4145747114424a"+style="display:+inline-block;+width:+468px;+height:+60px;"><iframe+width="468"+height="60"+scrolling="no"+frameborder="0"+allowtransparency="true"+style="display:inline-block;vertical-align:+bottom;"></iframe></div>\n\x3Cscript+type="text/javascript">\n(admaxads+=+window.admaxads+||+[]).push({admax_id:+"97bbe8a54d9e077bdb4145747114424a",type:+"switch"});\x3C/script>\n\x3Cscript+type="text/javascript"+charset="utf-8"+src="https://adm.shinobi.jp/st/t.js"+async="">\x3C/script>\n\x3C!--+admax+-->\n++\t<div+id="topad_bottom"></div>\n++';
 	this.LoginGame = () => {
 		$("#logingame_alerttext").empty();
 		const fid = $("#loginformid").val();
@@ -156,13 +158,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 				opacity: 1,
 				p1: 0,
 				p2: 60,
-				h: $("#topad").html(),
+				h,
 			},
 			success: function (response) {
 				wait_LoginGame = false;
 				if (response.error == 404) return Error404();
-				if (response.error == 2)	
-					return olert(response.str);
+				if (response.error == 2) return alert(response.str);
 				if (response.error != 1) return alert("サーバエラー0628");
 				LoginGameNakami(response);
 				CookieSet("autologin", autologin ? 1 : 0);
@@ -199,7 +200,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				opacity: 1,
 				p1: 0,
 				p2: 60,
-				h: $("#topad").html(),
+				h,
 			},
 			success: function (response) {
 				wait_LoginGame = false;
@@ -209,8 +210,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 					AutoLoginKaizyo();
 					return $("#loginformid").val(cid);
 				}
-				if (response.error == 2)	
-					return olert(response.str);
+				if (response.error == 2) return olert(response.str);
 				if (response.error != 1) {
 					alert("自動ログインに失敗しました");
 					return AutoLoginKaizyo();
@@ -228,6 +228,54 @@ window.addEventListener("DOMContentLoaded", async () => {
 			},
 		});
 	};
+
+	$(document).on("keydown", (e) => {
+		if (e.ctrlKey && e.key === "Tab") {
+			e.preventDefault();
+			ipcRenderer.send("tabChange", {
+				reverse: e.shiftKey,
+			});
+			return;
+		}
+		if (e.ctrlKey && e.key === "w") {
+			e.preventDefault();
+			ipcRenderer.send("tabClose", {
+				url: new URL(location.href).origin,
+			});
+			return;
+		}
+		if (e.ctrlKey && e.key === "t") {
+			e.preventDefault();
+			ipcRenderer.send("tabAdd");
+			return;
+		}
+		if ((e.ctrlKey && e.key === "r") || e.key === "F5") {
+			e.preventDefault();
+			ipcRenderer.send("tabReload", {
+				url: new URL(location.href).origin,
+			});
+			return;
+		}
+	});
+
+	setInterval(() => {
+		ipcRenderer.invoke("state", {
+			url: new URL(location.href).origin,
+		}).then((s) => {
+			if (!s) return;
+			if (s.partyReady) {
+				if (myparty) {
+					PartyQuestReady();
+				}
+			}
+			if (s.exitField) {
+				if (now_field) {
+					ExitField();
+					setTimeout(() => PorchResultComplete(0), 500);
+				}
+			}
+		});
+	}, 500)
 
 	document.addEventListener("click", (e) => {
 		const { target } = e;
