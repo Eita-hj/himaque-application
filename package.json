@@ -79,7 +79,13 @@
 			"oneClick": false,
 			"allowToChangeInstallationDirectory": true
 		},
-		"publish": null
+		"publish": [
+			{
+			  "provider": "github",
+			  "owner": "noir-chat-9661",
+			  "repo": "himaque-application"
+			}
+		  ]
 	},
 	"author": "eita(No.16762) <sgr.9661.ea@gmail.com>",
 	"homepage": "https://addon.pjeita.top/"
