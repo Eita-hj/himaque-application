@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog, session } = require("electron");
+const {
+	app,
+	BrowserWindow,
+	ipcMain,
+	Menu,
+	dialog,
+	session,
+} = require("electron");
 const path = require("path");
 let c1 = 0,
 	c2 = 0;
@@ -8,21 +15,36 @@ let isMainWindow = false;
 const Store = require("electron-store").default;
 const store = new Store();
 
+//const { autoUpdater } = require("electron-updater");
+const state = {
+	use: {
+		exitField: false,
+		partyReady: false,
+	},
+	links: {
+		exitField: [],
+		partyReady: [],
+	}
+}
+
 const beforeSetting = store.get("setting") || {
 	windowCount: 1,
 	addon: false,
 	more_setting: "a",
 	addonModules: {
 		multilinechat: false,
-		chatmaxup: false
-	}
+		chatmaxup: false,
+		displaystatus: false,
+	},
+	type: "a",
+	mode: "tab",
 };
 
 app.setAboutPanelOptions({
 	applicationName: "ヒマクエ専用ブラウザ Meteor",
 	applicationVersion: require("../package.json").version,
-	copyright: "©︎マグナム中野 (HIMACHATQUEST) えいた(addon)",
-	authors: "マグナム中野、えいた",
+	copyright: "©︎マグナム中野 (HIMACHATQUEST) 凶兆の黒猫(addon)",
+	authors: "マグナム中野、凶兆の黒猫",
 	website: "https://addon.pjeita.top/",
 });
 
@@ -50,7 +72,90 @@ app.once("ready", () => {
 let mainWindow = null;
 let nowWindow = {};
 
-app.once("ready", start);
+let port = 20000;
+const tempServer = require("express")();
+let s = {};
+tempServer.use((req, res, next) => {
+	if (req.headers["user-agent"].includes("Electron")) next();
+});
+tempServer.use(require("cors")());
+tempServer.use(require("express").json());
+
+tempServer.get("/start", (req, res) => {
+	res.json({
+		port,
+		windowCount: Number(beforeSetting.windowCount),
+		type: beforeSetting.type,
+	});
+	s.close();
+});
+let server = {};
+const createServer_and_start = async () => {
+	const s = require("express")();
+	s.use((req, res, next) => {
+		if (req.headers["user-agent"].includes("Electron")) next();
+	});
+	s.use(require("cors")());
+	s.use(require("express").json());
+
+	const events = {};
+	s.get("/events", (req, res) => {
+		res.json(events);
+		events.add = false;
+		events.close = [];
+		events.change = false;
+		events.change2 = false;
+		events.reload = [];
+		return;
+	});
+	ipcMain.on("tabAdd", () => {
+		if (beforeSetting.mode == "window") return;
+		events.add = true;
+	})
+	ipcMain.on("tabClose", (e, d) => {
+		if (beforeSetting.mode == "window") return;
+		const { url } = d;
+		events.close.push(url);
+	})
+	ipcMain.on("tabChange", (e, d) => {
+		if (beforeSetting.mode == "window") return;
+		events[d.reverse ? "change2" : "change"] = true;
+	})
+	ipcMain.on("tabReload", (e, d) => {
+		if (beforeSetting.mode == "window") return;
+		const { url } = d;
+		events.reload.push(url);
+	})
+	ipcMain.handle("state", (e, d) => {
+		const { url } = d;
+		const returnValue = {}
+		if (state.use.exitField) {
+			if (!state.links.exitField.includes(url)) {
+				state.links.exitField.push(url);
+				returnValue.exitField = true;
+			}
+		}
+		if (state.use.partyReady) {
+			if (!state.links.partyReady.includes(url)) {
+				state.links.partyReady.push(url);
+				returnValue.partyReady = true;
+			};
+		}
+		return returnValue;
+	})
+	s.on("error", (err) => {
+		if (err.code === "EADDRINUSE") {
+			port++;
+			createServer_and_start(server);
+		}
+	});
+	s.listen(port, () => {
+		server = s;
+	});
+};
+createServer_and_start(server);
+
+app.on("ready", start);
 function start() {
 	mainWindow = null;
 	c2 = 0;
@@ -139,11 +244,10 @@ function start() {
 				})
 				.catch(() => {
 					versionChecked = true;
-					dialog
-						.showErrorBox(
-							"更新確認エラー",
-							"更新確認サーバーとの接続に失敗しました。"
-						)
+					dialog.showErrorBox(
+						"更新確認エラー",
+						"更新確認サーバーとの接続に失敗しました。"
+					);
 					modeSelectWindow.show();
 				});
 		} else {
@@ -162,6 +266,7 @@ function start() {
 	ipcMain.once("start", (e, obj) => {
 		c1 = 1;
 		modeSelectWindow.close();
+
 		mainWindow = new BrowserWindow({
 			width: 960,
 			height: 720,
@@ -173,22 +278,24 @@ function start() {
 					obj.addon ? "preload.js" : "preload_noaddon.js"
 				),
 				contextIsolation: false,
-				nodeIntegrationInSubFrames: obj.windowCount == 1 ? false : true,
+				nodeIntegration: false,
+				nodeIntegrationInSubFrames: true,
 				allowRunningInsecureContent: true,
+				webSecurity: false,
 			},
 		});
 		nowWindow = mainWindow;
+		
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
 		beforeSetting.type = obj?.type || "a";
-		const hash = obj.addon ? `#multilinechat=${obj.addonModules.multilinechat}&chatmaxup=${obj.addonModules.chatmaxup}&displaystatus=${obj.addonModules.displaystatus}&` : ""
-		const url =
-			(obj.windowCount == 1
-				? "https://himaquest.com/"
-				: obj?.type == "a"
-				? `http://pjeita.top/hcq/HIMAQUESTx${obj.windowCount}`
-				: `http://pjeita.top/hcq/HIMACHATQUESTx${obj.windowCount}`) + hash;
-		mainWindow.loadURL(url);
+		beforeSetting.addonModules = obj.addonModules
+		beforeSetting.mode = obj.mode;
+
+		s = tempServer.listen(
+			16762,
+			() => mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`))
+		);
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
 			isMainWindow = true;
@@ -205,9 +312,17 @@ function start() {
 	});
 }
 
-app.on("quit", () => {
-	store.set("setting", beforeSetting)
+ipcMain.on("startgame", (e) => {
+	return e.returnValue = {
+		port,
+		addonModules: Number(beforeSetting.addonModules),
+		type: beforeSetting.type,
+	}
 })
+
+app.on("quit", () => {
+	store.set("setting", beforeSetting);
+});
 
 const templateMenu = [
 	...(process.platform == "darwin"
@@ -254,6 +369,39 @@ const templateMenu = [
 						c2 = 1;
 						focusedWindow.close();
 						start();
+					}
+				},
+			},
+		],
+	},
+	{
+		label: "一括操作",
+		submenu: [
+			{
+				label: "一斉準備完了",
+				click(item, focusedWindow) {
+					if (!isMainWindow) return;
+					if (focusedWindow) {
+						state.use.partyReady = true;
+						state.links.partyReady.length = 0;
+						setTimeout(() => {
+							state.use.partyReady = false
+							state.links.partyReady.length = 0;
+						}, 1500)
+					}
+				},
+			},
+			{
+				label: "一斉帰宅",
+				click(item, focusedWindow) {
+					if (!isMainWindow) return;
+					if (focusedWindow) {
+						state.use.exitField = true;
+						state.links.exitField.length = 0;
+						setTimeout(() => {
+							state.use.exitField = false
+							state.links.exitField.length = 0;
+						}, 1500)
 					}
 				},
 			},
