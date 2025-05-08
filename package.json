@@ -35,22 +35,35 @@
 		],
 		"linux": {
 			"icon": "assets/icon.png",
-			"target": [
-				"AppImage"
-			],
+			"target": {
+				"target": "AppImage",
+				"arch": [
+					"x64",
+					"armv7l",
+					"arm64"
+				]
+			},
 			"category": "Game"
 		},
 		"mac": {
 			"icon": "assets/icon.icns",
-			"target": [
-				"dmg",
-				"univarsal"
-			]
+			"target": {
+				"target": "dmg",
+				"arch": [
+					"x64",
+					"univarsal"
+				]
+			}
 		},
 		"win": {
 			"icon": "assets/icon.ico",
 			"target": [
-				"nsis"
+				{
+					"target": "nsis",
+					"arch": [
+						"x64"
+					]
+				}
 			]
 		},
 		"nsis": {
