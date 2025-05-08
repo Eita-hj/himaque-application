@@ -59,14 +59,37 @@
 
 	const { port, windowCount, type } = setting;
 	
+	$(document).on("keydown", (e) => {
+		if ((e.ctrlKey && e.key === "s") || e.key === "F1") {
+			e.preventDefault();
+			return fetch(`http://localhost:${port}/events`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ type: "partyReady" }),
+			})
+		}
+		if ((e.ctrlKey && e.key === "b") || e.key === "F2") {
+			e.preventDefault();
+			return fetch(`http://localhost:${port}/events`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ type: "exitField" }),
+			})
+		}
+	})
+
 	const DOM = hcqLinks.slice(0, windowCount).map(n => `<iframe src="${n.url}"></iframe>`)
 
 	$("#gamearea").html(DOM);
 	switch (windowCount) {
 		case 1:
 			$("iframe").css({
-				width: "100%",
-				height: "100%",
+				width: "calc(100% - 5px)",
+				height: "calc(100% - 10px)",
 				border: "none",
 			});
 			break;
