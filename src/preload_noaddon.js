@@ -369,7 +369,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				wait_LoginGame = false;
 				if (response.error == 404) return Error404();
 				if (response.error == 2)	
-					return olert(response.str);
+					return $("#logingame_alerttext").text(response.str);
 				if (response.error != 1) return alert("サーバエラー0628");
 				LoginGameNakami(response);
 				CookieSet("autologin", autologin ? 1 : 0);
@@ -417,6 +417,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 					AutoLoginKaizyo();
 					return $("#loginformid").val(cid);
 				}
+				if (response.error == 2) return $("#logingame_alerttext").text(response.str);
 				if (response.error != 1) {
 					alert("自動ログインに失敗しました");
 					return AutoLoginKaizyo();
@@ -462,6 +463,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 			});
 			return;
 		}
+		if ((e.ctrlKey && e.key === "s") || e.key === "F1") {
+			e.preventDefault();
+			ipcRenderer.send("partyReady")
+			return;
+		}
+		if ((e.ctrlKey && e.key === "b") || e.key === "F2") {
+			e.preventDefault();
+			ipcRenderer.send("exitField")
+			return;
+		}
 	});
 	
 	setInterval(() => {
@@ -474,9 +485,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 			}
 			if (s.exitField) {
-				if (!now_field) return;
-				ExitField();
-				setTimeout(() => PorchResultComplete(0), 500);
+				if (now_scene != 20) {
+					ExitField();
+					setTimeout(() => PorchResultComplete(0), 500);
+				}
 			}
 		});
 	}, 500)
