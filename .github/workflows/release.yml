@@ -37,9 +37,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # GitHub Token for publishing
         run: |
           if [[ "$RUNNER_OS" == "macOS" ]]; then
-            yarn electron-builder -- --mac dmg universal --publish always
+            yarn electron-builder -- --mac --publish always
           elif [[ "$RUNNER_OS" == "Linux" ]]; then
-            yarn electron-builder -- --linux appimage --publish always
+            yarn electron-builder -- --linux --publish always
           elif [[ "$RUNNER_OS" == "Windows" ]]; then
-            yarn electron-builder -- --win nsis --publish always
+            yarn electron-builder -- --win --publish always
           fi
