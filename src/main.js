@@ -55,12 +55,81 @@ const beforeSetting = store.get("setting") || {
 app.setAboutPanelOptions({
 	applicationName: "ヒマクエ専用ブラウザ Meteor",
 	applicationVersion: require("../package.json").version,
-	copyright: "©︎マグナム中野 (HIMACHATQUEST) 凶兆の黒猫(addon)",
+	copyright: "©︎マグナム中野 (HIMACHATQUEST) 凶兆の黒猫(addon・Meteor)",
 	authors: "マグナム中野、凶兆の黒猫",
 	website: "https://addon.pjeita.top/",
 });
 
 let versionChecked = !app.isPackaged;
+
+const events = {
+	add: false,
+	close: false,
+	change: false,
+	change2: false,
+	reload: [],
+};
+ipcMain.handle("events", (e, d) => {
+	const returnValue = {...events};
+	events.add = false;
+	events.close = false;
+	events.change = false;
+	events.change2 = false;
+	events.reload = [];
+	return returnValue;
+});
+ipcMain.on("tabAdd", () => {
+	if (beforeSetting.mode == "window") return;
+	events.add = true;
+});
+ipcMain.on("tabClose", (e, d) => {
+	if (beforeSetting.mode == "window") return;
+	events.close = true;
+});
+ipcMain.on("tabChange", (e, d) => {
+	if (beforeSetting.mode == "window") return;
+	events[d.reverse ? "change2" : "change"] = true;
+});
+ipcMain.on("tabReload", (e, d) => {
+	if (beforeSetting.mode == "window") return;
+	const { url } = d;
+	events.reload.push(url);
+});
+ipcMain.on("state", (e, d) => {
+	if (d.type == "exitField") {
+		state.use.exitField = true;
+		state.links.exitField.length = 0;
+		setTimeout(() => {
+			state.use.exitField = false;
+			state.links.exitField.length = 0;
+		}, 1500);
+	}
+	if (d.type == "partyReady") {
+		state.use.partyReady = true;
+		state.links.partyReady.length = 0;
+		setTimeout(() => {
+			state.use.partyReady = false;
+			state.links.partyReady.length = 0;
+		}, 1500);
+	}
+})
+ipcMain.handle("state", (e, d) => {
+	const { url } = d;
+	const returnValue = {};
+	if (state.use.exitField) {
+		if (!state.links.exitField.includes(url)) {
+			state.links.exitField.push(url);
+			returnValue.exitField = true;
+		}
+	}
+	if (state.use.partyReady) {
+		if (!state.links.partyReady.includes(url)) {
+			state.links.partyReady.push(url);
+			returnValue.partyReady = true;
+		}
+	}
+	return returnValue;
+});
 
 app.once("ready", () => {
 	ipcMain.on("ready", (e) => {
@@ -83,123 +152,6 @@ app.once("ready", () => {
 let mainWindow = null;
 let nowWindow = {};
 
-let port = 20000;
-const tempServer = require("express")();
-let s = {};
-tempServer.use((req, res, next) => {
-	if (req.headers["user-agent"].includes("Electron")) next();
-});
-tempServer.use(require("cors")());
-tempServer.use(require("express").json());
-
-tempServer.get("/start", (req, res) => {
-	res.json({
-		port,
-		windowCount: Number(beforeSetting.windowCount),
-		type: beforeSetting.type,
-	});
-	s.close();
-});
-let server = {};
-const createServer_and_start = async () => {
-	const s = require("express")();
-	s.use((req, res, next) => {
-		if (req.headers["user-agent"].includes("Electron")) next();
-	});
-	s.use(require("cors")());
-	s.use(require("express").json());
-
-	const events = {};
-	s.get("/events", (req, res) => {
-		res.json(events);
-		events.add = false;
-		events.close = [];
-		events.change = false;
-		events.change2 = false;
-		events.reload = [];
-		return;
-	});
-	s.post("/events", (req, res) => {
-		const { type } = req.body;
-		if (type == "exitField") {
-			state.use.exitField = true;
-			state.links.exitField.length = 0;
-			setTimeout(() => {
-				state.use.exitField = false;
-				state.links.exitField.length = 0;
-			}, 1500);
-		} else if (type == "partyReady") {
-			state.use.partyReady = true;
-			state.links.partyReady.length = 0;
-			setTimeout(() => {
-				state.use.partyReady = false;
-				state.links.partyReady.length = 0;
-			}, 1500);
-		}
-		res.json({});
-	});
-	ipcMain.on("exitField", (e, d) => {
-		state.use.exitField = true;
-		state.links.exitField.length = 0;
-		setTimeout(() => {
-			state.use.exitField = false;
-			state.links.exitField.length = 0;
-		}, 1500);
-	});
-	ipcMain.on("partyReady", (e, d) => {
-		state.use.partyReady = true;
-		state.links.partyReady.length = 0;
-		setTimeout(() => {
-			state.use.partyReady = false;
-			state.links.partyReady.length = 0;
-		}, 1500);
-	});
-	ipcMain.on("tabAdd", () => {
-		if (beforeSetting.mode == "window") return;
-		events.add = true;
-	});
-	ipcMain.on("tabClose", (e, d) => {
-		if (beforeSetting.mode == "window") return;
-		const { url } = d;
-		events.close.push(url);
-	});
-	ipcMain.on("tabChange", (e, d) => {
-		if (beforeSetting.mode == "window") return;
-		events[d.reverse ? "change2" : "change"] = true;
-	});
-	ipcMain.on("tabReload", (e, d) => {
-		if (beforeSetting.mode == "window") return;
-		const { url } = d;
-		events.reload.push(url);
-	});
-	ipcMain.handle("state", (e, d) => {
-		const { url } = d;
-		const returnValue = {};
-		if (state.use.exitField) {
-			if (!state.links.exitField.includes(url)) {
-				state.links.exitField.push(url);
-				returnValue.exitField = true;
-			}
-		}
-		if (state.use.partyReady) {
-			if (!state.links.partyReady.includes(url)) {
-				state.links.partyReady.push(url);
-				returnValue.partyReady = true;
-			}
-		}
-		return returnValue;
-	});
-	s.on("error", (err) => {
-		if (err.code === "EADDRINUSE") {
-			port++;
-			createServer_and_start(server);
-		}
-	});
-	s.listen(port, () => {
-		server = s;
-	});
-};
-createServer_and_start(server);
 app.on("ready", () => {
 	if (!versionChecked) autoUpdater.checkForUpdatesAndNotify();
 	start()
@@ -223,11 +175,12 @@ function start() {
 		height: 600,
 		show: false,
 		webPreferences: {
-			devTools: false,
+			devTools: !app.isPackaged,
 			preload: path.join(__dirname, "preload_ModeSelect.js"),
 		},
 	});
 	nowWindow = modeSelectWindow;
+	if (!app.isPackaged) modeSelectWindow.webContents.openDevTools();
 
 	app.once("activate", () => {
 		if (!BrowserWindow.getAllWindows().length) createWindow();
@@ -266,7 +219,7 @@ function start() {
 			height: 720,
 			show: false,
 			webPreferences: {
-				devTools: false,
+				devTools: !app.isPackaged,
 				preload: path.join(
 					__dirname,
 					obj.addon ? "preload.js" : "preload_noaddon.js"
@@ -280,15 +233,21 @@ function start() {
 		});
 		nowWindow = mainWindow;
 
+		if(!app.isPackaged) mainWindow.webContents.openDevTools();
+
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
 		beforeSetting.type = obj?.type || "a";
 		beforeSetting.addonModules = obj.addonModules;
 		beforeSetting.mode = obj.mode;
 
-		s = tempServer.listen(16762, () =>
-			mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`))
-		);
+		events.add = false;
+		events.close = false;
+		events.change = false;
+		events.change2 = false;
+		events.reload = [];
+		mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`))
+		
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
 			isMainWindow = true;
@@ -307,9 +266,10 @@ function start() {
 
 ipcMain.on("startgame", (e) => {
 	return (e.returnValue = {
-		port,
-		addonModules: Number(beforeSetting.addonModules),
+		addonModules: beforeSetting.addonModules,
+		windowCount: beforeSetting.windowCount,
 		type: beforeSetting.type,
+		mode: beforeSetting.mode,
 	});
 });
 
