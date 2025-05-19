@@ -82,8 +82,7 @@
 			"uninstallDisplayName": "Meteor Uninstaller",
 			"createDesktopShortcut": false,
 			"createStartMenuShortcut": true,
-			"shortcutName": "Meteor",
-			"language": "ja_JP"
+			"shortcutName": "Meteor"
 		},
 		"publish": [
 			{
