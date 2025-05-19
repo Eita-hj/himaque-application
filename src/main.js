@@ -64,7 +64,6 @@ const ACCOUNT = "meteor_masterkey";
 let masterkey = "";
 const password = store.get("password") || [];
 
-console.log(password)
 const crypto = require("crypto");
 
 function addPassword(data) {
@@ -86,7 +85,7 @@ function addPassword(data) {
 			iv.toString("base64"),
 			tag.toString("base64"),
 			encrypted.toString("base64"),
-		].join(":")
+		].join(":"),
 	});
 	store.set("password", password);
 }
@@ -108,7 +107,7 @@ function getPassword() {
 			password: Buffer.concat([
 				decipher.update(encrypted),
 				decipher.final(),
-			]).toString("utf8")
+			]).toString("utf8"),
 		});
 	}
 	return data;
@@ -127,24 +126,39 @@ keytar.getPassword(SERVICE, ACCOUNT).then((result) => {
 
 ipcMain.handle("password", () => {
 	return getPassword();
-})
+});
 
 ipcMain.on("password", (e, data) => {
 	if (data.type == "add") {
 		const { userdata } = data.data;
-		const index = password.findIndex(n => n.userdata.id == userdata.id);
+		const index = password.findIndex((n) => n.userdata.id == userdata.id);
 		if (index !== -1) {
 			password.splice(index, 1);
-		};
+		}
 		addPassword(data.data);
 	} else if (data.type == "delete") {
-		const hcqId = data.id
-		const index = password.findIndex(n => n.userdata.id == hcqId);
+		const hcqId = data.id;
+		const index = password.findIndex((n) => n.userdata.id == hcqId);
 		if (index !== -1) {
 			password.splice(index, 1);
-		};
+		}
 		store.set("password", password);
 	}
+});
+
+ipcMain.handle("ougipreset", (d, e) => {
+	return (
+		store.get("ougipreset") || {
+			version: 3,
+			data: {
+				ougi: [],
+			},
+		}
+	);
+});
+
+ipcMain.on("ougipreset", (e, d) => {
+	store.set("ougipreset", d);
 });
 
 ipcMain.on("tabAdd", () => {
