@@ -169,111 +169,92 @@ window.addEventListener("DOMContentLoaded", async () => {
 					return;
 				}
 			};
-			f.tabAdd();
+			ipcRenderer.on("tabAdd", () => f.tabAdd());
+			ipcRenderer.on("tabClose", (e, d) => f.tabClose(d));
+			ipcRenderer.on("tabChange", (e, d) => {
+				const activeTab = $(".tab.active");
+				const nextTab = activeTab.next(".tab").length
+					? activeTab.next(".tab")
+					: $(".tab").first();
+				const prevTab = activeTab.prev(".tab").length
+					? activeTab.prev(".tab")
+					: $(".tab").last();
+				return f.tabChange({ target: d.reverse ? prevTab : nextTab });
+			});
+			ipcRenderer.on("tabReload", (e, d) => {
+				const activeTab = $(".tab.active");
+				const id = Number(activeTab.attr("name"));
+				$(`iframe[name="${id}"]`)
+					.removeAttr("src")
+					.attr("src", hcqLinks.find((n) => n.id == id).url);
+			});
 
-			setInterval(() => {
-				ipcRenderer.invoke("events").then((s) => {
-					if (s.add) f.tabAdd();
-					if (s.close) f.tabClose({ target: $(`.tab.active`) });
-					if (s.change) {
-						const activeTab = $(".tab.active");
-						const nextTab = activeTab.next(".tab").length
-							? activeTab.next(".tab")
-							: $(".tab").first();
-						f.tabChange({ target: nextTab });
-					}
-					if (s.change2) {
-						const activeTab = $(".tab.active");
-						const prevTab = activeTab.prev(".tab").length
-							? activeTab.prev(".tab")
-							: $(".tab").last();
-						f.tabChange({ target: prevTab });
-					}
-					if (s.reload.length) {
-						s.reload.forEach((url) => {
-							const id = hcqLinks.find((n) => n.url == url).id;
-							$(`iframe[name="${id}"]`)
-								.removeAttr("src")
-								.attr("src", url);
-						});
-					}
-				});
-			}, 200);
+			f.tabAdd();
 		} else if (d.mode == "window") {
 			const $ = window.jQuery;
 			const DOM = hcqLinks.slice(0, Number(d.windowCount)).map(n => `<iframe src="${n.url}"></iframe>`)
 			$("#gamearea").html(DOM);
 			switch (Number(d.windowCount)) {
-				case 1:
-					$("iframe").css({
-						width: "calc(100% - 5px)",
-						height: "calc(100% - 10px)",
-						border: "none",
-					});
-					break;
 				case 2:
-					$("iframe").css({
-						width: d.type == "a" ? "calc(100% - 5px)" : "calc(50% - 5px)",
-						height: d.type == "a" ? "calc(50% - 10px)" : "calc(100% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns":
+							d.type == "a" ? "1fr" : "1fr 1fr",
+						"grid-template-rows":
+							d.type == "a" ? "1fr 1fr" : "1fr",
 					});
 					break;
 				case 3:
-					$("iframe").css({
-						width: d.type == "a" ? "calc(100% - 5px)" :"calc(33% - 5px)",
-						height: d.type == "a" ? "calc(33% - 10px)" : "calc(100% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns":
+							d.type == "a" ? "1fr" : "1fr 1fr 1fr",
+						"grid-template-rows":
+							d.type == "a" ? "1fr 1fr 1fr" : "1fr",
 					});
 					break;
 				case 4:
-					$("iframe").css({
-						width: d.type == "a" ? "calc(50% - 5px)" : "calc(25% - 5px)",
-						height: d.type == "a" ? "calc(50% - 10px)" : "calc(100% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns":
+							d.type == "a" ? "1fr 1fr" : "1fr 1fr 1fr 1fr",
+						"grid-template-rows":
+							d.type == "a" ? "1fr 1fr" : "1fr",
 					});
 					break;
 				case 5:
-					$("iframe").css({
-						width: "calc(1/3 - 5px)",
-						height: "calc(50% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns": "1fr 1fr 1fr",
+						"grid-template-rows": "1fr 1fr",
 					});
-					$("iframe:eq(0)").css("height", "calc(100% - 10px)");
+					$("iframe:eq(0)").css("grid-row", "span 2");
 					break;
 				case 6:
-					$("iframe").css({
-						width: "calc(1/3 - 5px)",
-						height: "calc(50% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns": "1fr 1fr 1fr",
+						"grid-template-rows": "1fr",
 					});
 					break;
 				case 7:
-					$("iframe").css({
-						width: "calc(1/3 - 5px)",
-						height: "calc(50% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns": "1fr 1fr 1fr 1fr",
+						"grid-template-rows": "1fr 1fr",
 					});
-					$("iframe:eq(0)").css("height", "calc(100% - 10px)");
+					$("iframe:eq(0)").css("grid-row", "span 2");
 					break;
 				case 8:
-					$("iframe").css({
-						width: "calc(25% - 5px)",
-						height: "calc(50% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns": "1fr 1fr 1fr 1fr",
+						"grid-template-rows": "1fr 1fr",
 					});
 					break;
 				case 9:
-					$("iframe").css({
-						width: "calc(1/3 - 5px)",
-						height: "calc(1/3 - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns": "1fr 1fr 1fr",
+						"grid-template-rows": "1fr 1fr 1fr",
 					});
 					break;
 				case 10:
-					$("iframe").css({
-						width: "calc(20% - 5px)",
-						height: "calc(50% - 10px)",
-						border: "none",
+					$("#gamearea").css({
+						"grid-template-columns": "1fr 1fr 1fr 1fr 1fr",
+						"grid-template-rows": "1fr 1fr",
 					});
 					break;
 			}
