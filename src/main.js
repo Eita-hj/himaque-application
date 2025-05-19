@@ -1,10 +1,4 @@
-const {
-	app,
-	BrowserWindow,
-	ipcMain,
-	Menu,
-	dialog,
-} = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
 const path = require("path");
 let c1 = 0,
 	c2 = 0;
@@ -47,6 +41,7 @@ const beforeSetting = store.get("setting") || {
 		multilinechat: false,
 		chatmaxup: false,
 		displaystatus: false,
+		morepresets: false,
 	},
 	type: "a",
 	mode: "tab",
@@ -62,38 +57,111 @@ app.setAboutPanelOptions({
 
 let versionChecked = !app.isPackaged;
 
-const events = {
-	add: false,
-	close: false,
-	change: false,
-	change2: false,
-	reload: [],
-};
-ipcMain.handle("events", (e, d) => {
-	const returnValue = {...events};
-	events.add = false;
-	events.close = false;
-	events.change = false;
-	events.change2 = false;
-	events.reload = [];
-	return returnValue;
+const keytar = require("keytar");
+const SERVICE = require("../package.json").build.appId;
+const ACCOUNT = "meteor_masterkey";
+
+let masterkey = "";
+const password = store.get("password") || [];
+
+console.log(password)
+const crypto = require("crypto");
+
+function addPassword(data) {
+	const { password: pass } = data;
+	const salt = crypto.randomBytes(16);
+	const key = crypto.scryptSync(masterkey, salt, 32);
+	const iv = crypto.randomBytes(12);
+	const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+	const encrypted = Buffer.concat([
+		cipher.update(pass, "utf8"),
+		cipher.final(),
+	]);
+	const tag = cipher.getAuthTag();
+
+	password.push({
+		...data,
+		password: [
+			salt.toString("base64"),
+			iv.toString("base64"),
+			tag.toString("base64"),
+			encrypted.toString("base64"),
+		].join(":")
+	});
+	store.set("password", password);
+}
+
+function getPassword() {
+	const data = [];
+	for (let i = 0; i < password.length; i++) {
+		const { password: pass } = password[i];
+		const [saltB64, ivB64, tagB64, encryptedB64] = pass.split(":");
+		const salt = Buffer.from(saltB64, "base64");
+		const key = crypto.scryptSync(masterkey, salt, 32);
+		const iv = Buffer.from(ivB64, "base64");
+		const tag = Buffer.from(tagB64, "base64");
+		const encrypted = Buffer.from(encryptedB64, "base64");
+		const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+		decipher.setAuthTag(tag);
+		data.push({
+			...password[i],
+			password: Buffer.concat([
+				decipher.update(encrypted),
+				decipher.final(),
+			]).toString("utf8")
+		});
+	}
+	return data;
+}
+
+keytar.getPassword(SERVICE, ACCOUNT).then((result) => {
+	if (result) {
+		masterkey = result;
+	} else {
+		const masterKey = crypto.randomUUID();
+		keytar.setPassword(SERVICE, ACCOUNT, masterKey).then(() => {
+			masterkey = masterKey;
+		});
+	}
 });
+
+ipcMain.handle("password", () => {
+	return getPassword();
+})
+
+ipcMain.on("password", (e, data) => {
+	if (data.type == "add") {
+		const { userdata } = data.data;
+		const index = password.findIndex(n => n.userdata.id == userdata.id);
+		if (index !== -1) {
+			password.splice(index, 1);
+		};
+		addPassword(data.data);
+	} else if (data.type == "delete") {
+		const hcqId = data.id
+		const index = password.findIndex(n => n.userdata.id == hcqId);
+		if (index !== -1) {
+			password.splice(index, 1);
+		};
+		store.set("password", password);
+	}
+});
+
 ipcMain.on("tabAdd", () => {
 	if (beforeSetting.mode == "window") return;
-	events.add = true;
+	mainWindow.webContents.send("tabAdd");
 });
-ipcMain.on("tabClose", (e, d) => {
+ipcMain.on("tabClose", () => {
 	if (beforeSetting.mode == "window") return;
-	events.close = true;
+	mainWindow.webContents.send("tabClose");
 });
 ipcMain.on("tabChange", (e, d) => {
 	if (beforeSetting.mode == "window") return;
-	events[d.reverse ? "change2" : "change"] = true;
+	mainWindow.webContents.send("tabChange", d.reverse);
 });
 ipcMain.on("tabReload", (e, d) => {
 	if (beforeSetting.mode == "window") return;
-	const { url } = d;
-	events.reload.push(url);
+	mainWindow.webContents.send("tabReload", 1);
 });
 ipcMain.on("state", (e, d) => {
 	if (d.type == "exitField") {
@@ -112,7 +180,7 @@ ipcMain.on("state", (e, d) => {
 			state.links.partyReady.length = 0;
 		}, 1500);
 	}
-})
+});
 ipcMain.handle("state", (e, d) => {
 	const { url } = d;
 	const returnValue = {};
@@ -154,7 +222,7 @@ let nowWindow = {};
 
 app.on("ready", () => {
 	if (!versionChecked) autoUpdater.checkForUpdatesAndNotify();
-	start()
+	start();
 });
 
 autoUpdater.on("update-not-available", () => {
@@ -233,7 +301,7 @@ function start() {
 		});
 		nowWindow = mainWindow;
 
-		if(!app.isPackaged) mainWindow.webContents.openDevTools();
+		if (!app.isPackaged) mainWindow.webContents.openDevTools();
 
 		beforeSetting.windowCount = obj.windowCount;
 		beforeSetting.addon = obj.addon;
@@ -241,13 +309,8 @@ function start() {
 		beforeSetting.addonModules = obj.addonModules;
 		beforeSetting.mode = obj.mode;
 
-		events.add = false;
-		events.close = false;
-		events.change = false;
-		events.change2 = false;
-		events.reload = [];
-		mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`))
-		
+		mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`));
+
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
 			isMainWindow = true;
@@ -325,6 +388,13 @@ const templateMenu = [
 					}
 				},
 			},
+			/*
+				{
+					label: "パスワードマネージャー",
+					click(item, focusedWindow) {
+					},
+				}
+			*/
 		],
 	},
 	{
