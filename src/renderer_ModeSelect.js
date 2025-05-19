@@ -14,6 +14,7 @@ function send() {
 		multilinechat: document.getElementById("multilinechataddon").checked,
 		chatmaxup: document.getElementById("chatmaxupaddon").checked,
 		displaystatus: document.getElementById("displaystatusaddon").checked,
+		morepresets: document.getElementById("morepresetsaddon").checked,
 	};
 	window.electronAPI.start(obj);
 }
@@ -34,6 +35,8 @@ function ready() {
 		!!n.addonModules?.chatmaxup;
 	document.getElementById("displaystatusaddon").checked =
 		!!n.addonModules?.displaystatus;
+	document.getElementById("morepresetsaddon").checked =
+		!!n.addonModules?.morepresets;
 	if (n.mode == "window")
 		document.getElementById("windowcount").style.display = "";
 	(
