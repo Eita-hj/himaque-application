@@ -459,6 +459,100 @@ window.addEventListener("DOMContentLoaded", async () => {
 			}
 		};
 
+		this.PassEdited = () => {
+			if (waitProfileEdit) return;
+			const fid = $("#loginidhenkou").val();
+			const fpass = $("#passhenkou1").val();
+			const fpasscheck = $("#passhenkou2").val();
+			if (fid.length < 4 || fid.length > 100)
+				return $("#henkourespon").html(
+					"ログインIDを4～100文字にしてください"
+				);
+			if (CheckPassStr(fid))
+				return $("#henkourespon").html(
+					"ログインIDは半角英数字a～z,A～Z,0～9のみ使用できます"
+				);
+			if (fpass.length < 4 || fpass.length > 100)
+				return $("#henkourespon").html(
+					"パスワードを4～100文字にしてください"
+				);
+			if (CheckPassStr(fpass))
+				return $("#henkourespon").html(
+					"パスワードは半角英数字a～z,A～Z,0～9のみ使用できます"
+				);
+			if (fpass !== fpasscheck)
+				return $("#henkourespon").html("確認パスワードが一致しません");
+			waitProfileEdit = 1;
+			$.ajax({
+				type: "POST",
+				url: "Ksg_PassEdited.php",
+				data: { myid, seskey, fid, fpass },
+				success: function (response) {
+					waitProfileEdit = 0;
+					if (response.e == 2)
+						return $("#henkourespon").html(response.str);
+					if (response.e != 0x1) return alert("サーバエラーK0646");
+					password.find((n) => n.userdata.id == myid).id = fid;
+					password.find((n) => n.userdata.id == myid).password =
+						fpass;
+					ipcRenderer.send("password", {
+						type: "add",
+						data: {
+							userdata: {
+								name: $("#radiospace").text(),
+								id: myid,
+							},
+							id: fid,
+							password: fpass,
+						},
+					});
+					$("#passhenkoudiv")
+						.find(".sourcespace")
+						.html(
+							'<div style="text-align:center;padding-top:20px;">パスワードを変更しました。<br /><button onclick="LayerClose(this)">OK</button></div>'
+						);
+				},
+				error: function () {
+					waitProfileEdit = 0;
+					alert("なにかしらの不具合K0646");
+				},
+			});
+		};
+
+		this.MyProfileEdited = () => {
+			const fname = $("#myedit_name").val();
+			const fshoukai = $("#myedit_shoukai").val();
+			if (fname.length == 0) return;
+			if (fname.length > 50)
+				return alert("名前を50文字以下にしてください");
+			if (fshoukai.length > 1000)
+				return alert("紹介文を1000文字以下にしてください");
+			if (waitProfileEdit) return;
+			waitProfileEdit = 1;
+			$.ajax({
+				type: "POST",
+				url: "Ksg_MyProfileEdited.php",
+				data: { myid, seskey, fname, fshoukai },
+				success: function (response) {
+					waitProfileEdit = 0;
+					if (response.e != 1) return alert("サーバエラーK0645");
+					$("#profileedit").remove();
+					UserWindowMe();
+					if (password.find((n) => n.userdata.id == myid)) {
+						const data = password.find(
+							(n) => n.userdata.id == myid
+						);
+						data.userdata.name = fname;
+						ipcRenderer.send("password", { type: "add", data });
+					}
+				},
+				error: function () {
+					waitProfileEdit = 0;
+					alert("なにかしらの不具合K0645");
+				},
+			});
+		};
+
 		this.addonModules = {
 			multilinechat: false,
 			chatmaxup: false,
@@ -499,6 +593,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 			})
 				.then((n) => n.text())
 				.then(eval);
+
+		this.getPresetData = async () => {
+			return await ipcRenderer.invoke("ougipreset");
+		};
+		this.setPresetData = (d) => {
+			ipcRenderer.send("ougipreset", d);
+			this.presets = d;
+		};
+
+		this.presets = await this.getPresetData();
 	};
 	const h =
 		'\n++\t<div+id="topad_top"></div>\n\x3C!--+admax+-->\n<div+class="admax-switch"+data-admax-id="97bbe8a54d9e077bdb4145747114424a"+style="display:+inline-block;+width:+468px;+height:+60px;"><iframe+width="468"+height="60"+scrolling="no"+frameborder="0"+allowtransparency="true"+style="display:inline-block;vertical-align:+bottom;"></iframe></div>\n\x3Cscript+type="text/javascript">\n(admaxads+=+window.admaxads+||+[]).push({admax_id:+"97bbe8a54d9e077bdb4145747114424a",type:+"switch"});\x3C/script>\n\x3Cscript+type="text/javascript"+charset="utf-8"+src="https://adm.shinobi.jp/st/t.js"+async="">\x3C/script>\n\x3C!--+admax+-->\n++\t<div+id="topad_bottom"></div>\n++';
@@ -617,96 +721,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 		});
 	};
 
-	this.PassEdited = () => {
-		if (waitProfileEdit) return;
-		const fid = $("#loginidhenkou").val();
-		const fpass = $("#passhenkou1").val();
-		const fpasscheck = $("#passhenkou2").val();
-		if (fid.length < 4 || fid.length > 100)
-			return $("#henkourespon").html(
-				"ログインIDを4～100文字にしてください"
-			);
-		if (CheckPassStr(fid))
-			return $("#henkourespon").html(
-				"ログインIDは半角英数字a～z,A～Z,0～9のみ使用できます"
-			);
-		if (fpass.length < 4 || fpass.length > 100)
-			return $("#henkourespon").html(
-				"パスワードを4～100文字にしてください"
-			);
-		if (CheckPassStr(fpass))
-			return $("#henkourespon").html(
-				"パスワードは半角英数字a～z,A～Z,0～9のみ使用できます"
-			);
-		if (fpass !== fpasscheck)
-			return $("#henkourespon").html("確認パスワードが一致しません");
-		waitProfileEdit = 1;
-		$.ajax({
-			type: "POST",
-			url: "Ksg_PassEdited.php",
-			data: { myid, seskey, fid, fpass },
-			success: function (response) {
-				waitProfileEdit = 0;
-				if (response.e == 2)
-					return $("#henkourespon").html(response.str);
-				if (response.e != 0x1) return alert("サーバエラーK0646");
-				password.find((n) => n.userdata.id == myid).id = fid;
-				password.find((n) => n.userdata.id == myid).password = fpass;
-				ipcRenderer.send("password", {
-					type: "add",
-					data: {
-						userdata: {
-							name: $("#radiospace").text(),
-							id: myid,
-						},
-						id: fid,
-						password: fpass,
-					},
-				});
-				$("#passhenkoudiv")
-					.find(".sourcespace")
-					.html(
-						'<div style="text-align:center;padding-top:20px;">パスワードを変更しました。<br /><button onclick="LayerClose(this)">OK</button></div>'
-					);
-			},
-			error: function () {
-				waitProfileEdit = 0
-				alert("なにかしらの不具合K0646");
-			},
-		});
-	};
-
-	this.MyProfileEdited = () => {
-	const fname = $("#myedit_name").val()
-	const fshoukai = $("#myedit_shoukai").val()
-	if (fname.length == 0) return;
-	if (fname.length > 50)
-		return alert("名前を50文字以下にしてください")
-	if (fshoukai.length > 1000)
-		return alert("紹介文を1000文字以下にしてください")
-	if (waitProfileEdit) return 0x0;
-	waitProfileEdit = 1
-	$.ajax({
-		type: "POST",
-		url: "Ksg_MyProfileEdited.php",
-		data: {myid,seskey,fname,fshoukai},
-		success: function (response) {
-			waitProfileEdit = 0;
-			if (response.e != 1) return alert("サーバエラーK0645");
-			$("#profileedit").remove(), UserWindowMe();
-			if (password.find((n) => n.userdata.id == myid)) {
-				const data = password.find((n) => n.userdata.id == myid);
-				data.userdata.name = fname;
-				ipcRenderer.send("password", { type: "add", data });
-			}
-		},
-		error: function () {
-			waitProfileEdit = 0
-			alert("なにかしらの不具合K0645");
-		},
-	});
-}
-
 	$(document).on("keydown", (e) => {
 		if (e.ctrlKey && e.key === "Tab") {
 			e.preventDefault();
@@ -744,6 +758,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 			ipcRenderer.send("state", {
 				type: "exitField",
 			});
+			return;
+		}
+		if (e.ctrlKey && e.key === "m") {
+			e.preventDefault();
+			bgmflg = 0;
+			otoflg = 0;
+			audioflg = 0;
+			BgmStop();
 			return;
 		}
 	});
