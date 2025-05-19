@@ -58,7 +58,7 @@ app.setAboutPanelOptions({
 let versionChecked = !app.isPackaged;
 
 const keytar = require("keytar");
-const SERVICE = require("../package.json").build.appId;
+const SERVICE = "electron.himaqueapp.meteor";
 const ACCOUNT = "meteor_masterkey";
 
 let masterkey = "";
