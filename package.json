@@ -1,6 +1,6 @@
 {
 	"name": "himaque-application",
-	"version": "5.2.0",
+	"version": "5.3.0",
 	"description": "application of HIMACHATQUEST",
 	"main": "./src/main.js",
 	"scripts": {
@@ -14,6 +14,7 @@
 	"dependencies": {
 		"electron-store": "8.x",
 		"electron-updater": "^6.6.2",
+		"keytar": "^7.9.0",
 		"node-fetch": "^2.7.0"
 	},
 	"devDependencies": {
@@ -67,16 +68,24 @@
 			"icon": "assets/icon.ico",
 			"target": [
 				{
-					"target": "nsis",
+					"target": [
+						"nsis"
+					],
 					"arch": [
-						"x64"
+						"x64",
+						"ia32"
 					]
 				}
 			]
 		},
 		"nsis": {
 			"oneClick": false,
-			"allowToChangeInstallationDirectory": true
+			"allowToChangeInstallationDirectory": true,
+			"uninstallDisplayName": "Meteor Uninstaller",
+			"createDesktopShortcut": false,
+			"createStartMenuShortcut": true,
+			"shortcutName": "Meteor",
+			"language": "ja_JP"
 		},
 		"publish": [
 			{
@@ -86,6 +95,6 @@
 			}
 		]
 	},
-	"author": "eita(No.16762) <sgr.9661.ea@gmail.com>",
+	"author": "凶兆の黒猫(No.16762) <sgr.9661.ea@gmail.com>",
 	"homepage": "https://addon.pjeita.top/"
 }
