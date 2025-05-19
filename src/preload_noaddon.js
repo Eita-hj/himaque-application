@@ -95,7 +95,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 					}<span class="close">×</span></p></div>`
 				);
 				$(`.tab[name="${d.id}"] p`).on("click", (e) => f.tabChange(e));
-				$(`.tab[name="${d.id}"] .close`).on("click", (e) => f.tabClose(e));
+				$(`.tab[name="${d.id}"] .close`).on("click", (e) =>
+					f.tabClose(e)
+				);
 				$("#gamearea").append(
 					`<iframe src="${d.url}" name="${d.id}"></iframe>`
 				);
@@ -107,21 +109,28 @@ window.addEventListener("DOMContentLoaded", async () => {
 				.on("click", () => f.tabAdd());
 
 			$("#tabarea").on("wheel", (e) => {
-				if (Math.abs(e.originalEvent.deltaY) < Math.abs(e.originalEvent.deltaX))
+				if (
+					Math.abs(e.originalEvent.deltaY) <
+					Math.abs(e.originalEvent.deltaX)
+				)
 					return;
 
 				const maxScrollLeft =
-					$("#tabs").get(0).scrollWidth - $("#tabs").get(0).clientWidth;
+					$("#tabs").get(0).scrollWidth -
+					$("#tabs").get(0).clientWidth;
 
 				if (
-					($("#tabs").scrollLeft() <= 0 && e.originalEvent.deltaY < 0) ||
+					($("#tabs").scrollLeft() <= 0 &&
+						e.originalEvent.deltaY < 0) ||
 					($("#tabs").scrollLeft() >= maxScrollLeft &&
 						e.originalEvent.deltaY > 0)
 				)
 					return;
 
 				e.preventDefault();
-				$("#tabs").scrollLeft($("#tabs").scrollLeft() + e.originalEvent.deltaY);
+				$("#tabs").scrollLeft(
+					$("#tabs").scrollLeft() + e.originalEvent.deltaY
+				);
 			});
 
 			f.keydownEvent = (e) => {
@@ -134,7 +143,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 					const prevTab = activeTab.prev(".tab").length
 						? activeTab.prev(".tab")
 						: $(".tab").last();
-					return f.tabChange({ target: e.shiftKey ? prevTab : nextTab });
+					return f.tabChange({
+						target: e.shiftKey ? prevTab : nextTab,
+					});
 				}
 				if (e.ctrlKey && e.key === "w") {
 					e.preventDefault();
@@ -192,15 +203,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 			f.tabAdd();
 		} else if (d.mode == "window") {
 			const $ = window.jQuery;
-			const DOM = hcqLinks.slice(0, Number(d.windowCount)).map(n => `<iframe src="${n.url}"></iframe>`)
+			const DOM = hcqLinks
+				.slice(0, Number(d.windowCount))
+				.map((n) => `<iframe src="${n.url}"></iframe>`);
 			$("#gamearea").html(DOM);
 			switch (Number(d.windowCount)) {
 				case 2:
 					$("#gamearea").css({
 						"grid-template-columns":
 							d.type == "a" ? "1fr" : "1fr 1fr",
-						"grid-template-rows":
-							d.type == "a" ? "1fr 1fr" : "1fr",
+						"grid-template-rows": d.type == "a" ? "1fr 1fr" : "1fr",
 					});
 					break;
 				case 3:
@@ -215,8 +227,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 					$("#gamearea").css({
 						"grid-template-columns":
 							d.type == "a" ? "1fr 1fr" : "1fr 1fr 1fr 1fr",
-						"grid-template-rows":
-							d.type == "a" ? "1fr 1fr" : "1fr",
+						"grid-template-rows": d.type == "a" ? "1fr 1fr" : "1fr",
 					});
 					break;
 				case 5:
@@ -263,8 +274,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 	}
 	if (!new URL(location.href).origin.includes("himaquest.com")) return;
 	document.body.style.display = "none";
-	let _tmp = {};
-	_tmp = setTimeout(() => location.reload(), 1500);
 	window.onbeforeunload = () => {};
 	this.notificationSound = new Audio(
 		"https://files.pjeita.top/meteor_notification.mp3"
@@ -510,7 +519,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 	};
 
 	window.PreLoad = () => {
-		clearTimeout(_tmp);
 		[
 			...document
 				.getElementsByClassName("orenosakuhin")[0]
@@ -588,9 +596,206 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 		GamenSizeAuto();
 		document.body.style.display = "";
+
+		$("#toplogindiv")
+			.css("height", "35%")
+			.append('<button id="pwmgrbtn">パスワードマネージャー</button>');
+		$("#page_login").append(
+			`<div id="pwmgr" style="width: 100vw; height: 100dvh; background-color: #00000055; display: none; position: fixed; top: 0; left: 0;">
+				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: min(60vh, 60vw); background-color: #ffffff;">
+					<button id="pwmgr_close" style="position: absolute; top: 0; right: 0; padding: 10px; cursor: pointer;">×</button>
+					<div id="pwmgr_content_inner" style="padding: 20px;">
+						<h2 style="text-align: center; font-size: 2rem;">パスワードマネージャー</h2>
+						<div id="pwmgr_list" style="max-height: 50vh; overflow-y: auto;">
+						</div>
+					</div>
+				</div>
+			</div>`
+		);
+		$("#pwmgr_close").on("click", () => {
+			$("#pwmgr").hide();
+		});
+		$("#pwmgrbtn").on("click", () => {
+			$("#pwmgr").show();
+			$("#pwmgr_list").empty();
+			if (password.length == 0) {
+				$("#pwmgr_list").append(
+					`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
+				);
+				return;
+			}
+			password.forEach((n) => {
+				$("#pwmgr_list").append(
+					`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
+						<div style="flex-grow: 3;">
+							No.${n.userdata.id} ${n.userdata.name}
+						</div>
+						<div style="flex-grow: 1;">
+							<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
+							<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
+						</div>
+					</div>`
+				);
+			});
+		});
+
+		let shiftPressed = false;
+		$(document).on("keydown", (e) => {
+			if (e.key === "Shift") {
+				shiftPressed = true;
+			}
+		});
+		$(document).on("keyup", (e) => {
+			if (e.key === "Shift") {
+				shiftPressed = false;
+			}
+		});
+
+		this.loadPwdData = (id) => {
+			const data = password.find((n) => n.userdata.id == id);
+			if (!data) return;
+			$("#loginformid").val(data.id);
+			$("#loginformpass").val(data.password);
+			this.LoginGame();
+		};
+
+		this.deletePwdData = (id) => {
+			const data = password.find((n) => n.userdata.id == id);
+			if (!data) return;
+			const check =
+				shiftPressed ||
+				confirm(
+					`No.${id} ${data.userdata.name}のパスワードデータを削除しますか？`
+				);
+			if (check) {
+				ipcRenderer.send("password", {
+					type: "delete",
+					id: data.userdata.id,
+				});
+				const index = password.findIndex((n) => n.userdata.id == id);
+				if (index !== -1) {
+					password.splice(index, 1);
+					$("#pwmgr_list").empty();
+					if (password.length == 0) {
+						$("#pwmgr_list").append(
+							`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
+						);
+						return;
+					}
+					password.forEach((n) => {
+						$("#pwmgr_list").append(
+							`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
+								<div style="flex-grow: 3;">
+									No.${n.userdata.id} ${n.userdata.name}
+								</div>
+								<div style="flex-grow: 1;">
+									<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
+									<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
+								</div>
+							</div>`
+						);
+					});
+				}
+			}
+		};
+
+		this.PassEdited = () => {
+			if (waitProfileEdit) return;
+			const fid = $("#loginidhenkou").val();
+			const fpass = $("#passhenkou1").val();
+			const fpasscheck = $("#passhenkou2").val();
+			if (fid.length < 4 || fid.length > 100)
+				return $("#henkourespon").html(
+					"ログインIDを4～100文字にしてください"
+				);
+			if (CheckPassStr(fid))
+				return $("#henkourespon").html(
+					"ログインIDは半角英数字a～z,A～Z,0～9のみ使用できます"
+				);
+			if (fpass.length < 4 || fpass.length > 100)
+				return $("#henkourespon").html(
+					"パスワードを4～100文字にしてください"
+				);
+			if (CheckPassStr(fpass))
+				return $("#henkourespon").html(
+					"パスワードは半角英数字a～z,A～Z,0～9のみ使用できます"
+				);
+			if (fpass !== fpasscheck)
+				return $("#henkourespon").html("確認パスワードが一致しません");
+			waitProfileEdit = 1;
+			$.ajax({
+				type: "POST",
+				url: "Ksg_PassEdited.php",
+				data: { myid, seskey, fid, fpass },
+				success: function (response) {
+					waitProfileEdit = 0;
+					if (response.e == 2)
+						return $("#henkourespon").html(response.str);
+					if (response.e != 0x1) return alert("サーバエラーK0646");
+					password.find((n) => n.userdata.id == myid).id = fid;
+					password.find((n) => n.userdata.id == myid).password =
+						fpass;
+					ipcRenderer.send("password", {
+						type: "add",
+						data: {
+							userdata: {
+								name: $("#radiospace").text(),
+								id: myid,
+							},
+							id: fid,
+							password: fpass,
+						},
+					});
+					$("#passhenkoudiv")
+						.find(".sourcespace")
+						.html(
+							'<div style="text-align:center;padding-top:20px;">パスワードを変更しました。<br /><button onclick="LayerClose(this)">OK</button></div>'
+						);
+				},
+				error: function () {
+					waitProfileEdit = 0;
+					alert("なにかしらの不具合K0646");
+				},
+			});
+		};
+
+		this.MyProfileEdited = () => {
+			const fname = $("#myedit_name").val();
+			const fshoukai = $("#myedit_shoukai").val();
+			if (fname.length == 0) return;
+			if (fname.length > 50)
+				return alert("名前を50文字以下にしてください");
+			if (fshoukai.length > 1000)
+				return alert("紹介文を1000文字以下にしてください");
+			if (waitProfileEdit) return;
+			waitProfileEdit = 1;
+			$.ajax({
+				type: "POST",
+				url: "Ksg_MyProfileEdited.php",
+				data: { myid, seskey, fname, fshoukai },
+				success: function (response) {
+					waitProfileEdit = 0;
+					if (response.e != 1) return alert("サーバエラーK0645");
+					$("#profileedit").remove();
+					UserWindowMe();
+					if (password.find((n) => n.userdata.id == myid)) {
+						const data = password.find(
+							(n) => n.userdata.id == myid
+						);
+						data.userdata.name = fname;
+						ipcRenderer.send("password", { type: "add", data });
+					}
+				},
+				error: function () {
+					waitProfileEdit = 0;
+					alert("なにかしらの不具合K0645");
+				},
+			});
+		};
 	};
 
-	const h = '\n++\t<div+id="topad_top"></div>\n\x3C!--+admax+-->\n<div+class="admax-switch"+data-admax-id="97bbe8a54d9e077bdb4145747114424a"+style="display:+inline-block;+width:+468px;+height:+60px;"><iframe+width="468"+height="60"+scrolling="no"+frameborder="0"+allowtransparency="true"+style="display:inline-block;vertical-align:+bottom;"></iframe></div>\n\x3Cscript+type="text/javascript">\n(admaxads+=+window.admaxads+||+[]).push({admax_id:+"97bbe8a54d9e077bdb4145747114424a",type:+"switch"});\x3C/script>\n\x3Cscript+type="text/javascript"+charset="utf-8"+src="https://adm.shinobi.jp/st/t.js"+async="">\x3C/script>\n\x3C!--+admax+-->\n++\t<div+id="topad_bottom"></div>\n++';
+	const h =
+		'\n++\t<div+id="topad_top"></div>\n\x3C!--+admax+-->\n<div+class="admax-switch"+data-admax-id="97bbe8a54d9e077bdb4145747114424a"+style="display:+inline-block;+width:+468px;+height:+60px;"><iframe+width="468"+height="60"+scrolling="no"+frameborder="0"+allowtransparency="true"+style="display:inline-block;vertical-align:+bottom;"></iframe></div>\n\x3Cscript+type="text/javascript">\n(admaxads+=+window.admaxads+||+[]).push({admax_id:+"97bbe8a54d9e077bdb4145747114424a",type:+"switch"});\x3C/script>\n\x3Cscript+type="text/javascript"+charset="utf-8"+src="https://adm.shinobi.jp/st/t.js"+async="">\x3C/script>\n\x3C!--+admax+-->\n++\t<div+id="topad_bottom"></div>\n++';
 	this.LoginGame = () => {
 		$("#logingame_alerttext").empty();
 		const fid = $("#loginformid").val();
@@ -621,14 +826,25 @@ window.addEventListener("DOMContentLoaded", async () => {
 				opacity: 1,
 				p1: 0,
 				p2: 60,
-				h
+				h,
 			},
 			success: function (response) {
 				wait_LoginGame = false;
 				if (response.error == 404) return Error404();
-				if (response.error == 2)	
+				if (response.error == 2)
 					return $("#logingame_alerttext").text(response.str);
 				if (response.error != 1) return alert("サーバエラー0628");
+				ipcRenderer.send("password", {
+					type: "add",
+					data: {
+						userdata: {
+							name: response.username,
+							id: response.userid,
+						},
+						id: fid,
+						password: fpass,
+					},
+				});
 				LoginGameNakami(response);
 				CookieSet("autologin", autologin ? 1 : 0);
 				CookieSet("cid", fid || 0);
@@ -665,7 +881,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				opacity: 1,
 				p1: 0,
 				p2: 60,
-				h
+				h,
 			},
 			success: function (response) {
 				wait_LoginGame = false;
@@ -675,7 +891,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 					AutoLoginKaizyo();
 					return $("#loginformid").val(cid);
 				}
-				if (response.error == 2) return $("#logingame_alerttext").text(response.str);
+				if (response.error == 2)
+					return $("#logingame_alerttext").text(response.str);
 				if (response.error != 1) {
 					alert("自動ログインに失敗しました");
 					return AutoLoginKaizyo();
@@ -722,42 +939,57 @@ window.addEventListener("DOMContentLoaded", async () => {
 		if ((e.ctrlKey && e.key === "s") || e.key === "F1") {
 			e.preventDefault();
 			ipcRenderer.send("state", {
-				type: "partyReady"
-			})
+				type: "partyReady",
+			});
 			return;
 		}
 		if ((e.ctrlKey && e.key === "b") || e.key === "F2") {
 			e.preventDefault();
 			ipcRenderer.send("state", {
-				type: "exitField"
-			})
+				type: "exitField",
+			});
+			return;
+		}
+		if (e.ctrlKey && e.key === "m") {
+			e.preventDefault();
+			bgmflg = 0;
+			otoflg = 0;
+			audioflg = 0;
+			BgmStop();
 			return;
 		}
 	});
-	
+
 	setInterval(() => {
-		ipcRenderer.invoke("state", {
-			url: new URL(location.href).origin,
-		}).then((s) => {
-			if (!s) return;
-			if (s.partyReady) {
-				if (myparty && now_scene == 20) {
-					setTimeout(PartyQuestReady, hcqLinks.find(n => n.url == new URL(location.href).origin).id * 1000);
+		ipcRenderer
+			.invoke("state", {
+				url: new URL(location.href).origin,
+			})
+			.then((s) => {
+				if (!s) return;
+				if (s.partyReady) {
+					if (myparty && now_scene == 20) {
+						setTimeout(
+							PartyQuestReady,
+							hcqLinks.find(
+								(n) => n.url == new URL(location.href).origin
+							).id * 1000
+						);
+					}
 				}
-			}
-			if (s.exitField) {
-				if (now_channel) ExitField();
-				if (now_scene != 20) {
-					setTimeout(() => {
-						if (!$("#zisatudiv").length) {
-							if (now_scene == 31) ExitQuest();
-							setTimeout(() => PorchResultComplete(0), 500);
-						}
-					}, 500);
+				if (s.exitField) {
+					if (now_channel) ExitField();
+					if (now_scene != 20) {
+						setTimeout(() => {
+							if (!$("#zisatudiv").length) {
+								if (now_scene == 31) ExitQuest();
+								setTimeout(() => PorchResultComplete(0), 500);
+							}
+						}, 500);
+					}
 				}
-			}
-		});
-	}, 500)
+			});
+	}, 500);
 
 	document.addEventListener("click", (e) => {
 		const { target } = e;
