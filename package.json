@@ -68,9 +68,7 @@
 			"icon": "assets/icon.ico",
 			"target": [
 				{
-					"target": [
-						"nsis"
-					],
+					"target": "nsis",
 					"arch": [
 						"x64",
 						"ia32"
