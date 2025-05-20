@@ -45,6 +45,16 @@ const beforeSetting = store.get("setting") || {
 	},
 	type: "a",
 	mode: "tab",
+	size: {
+		modeSelect: {
+			width: 800,
+			height: 600,
+		},
+		main: {
+			width: 960,
+			height: 720,
+		},
+	},
 };
 
 app.setAboutPanelOptions({
@@ -58,7 +68,7 @@ app.setAboutPanelOptions({
 let versionChecked = !app.isPackaged;
 
 const keytar = require("keytar");
-const SERVICE = "electron.himaqueapp.meteor";
+const SERVICE = "electron.himaqueapp.meteor" + !app.isPackaged ? "_dev" : "";
 const ACCOUNT = "meteor_masterkey";
 
 let masterkey = "";
@@ -66,7 +76,7 @@ const password = store.get("password") || [];
 
 const crypto = require("crypto");
 
-function addPassword(data) {
+function addPassword(data, place = password.length) {
 	const { password: pass } = data;
 	const salt = crypto.randomBytes(16);
 	const key = crypto.scryptSync(masterkey, salt, 32);
@@ -78,7 +88,7 @@ function addPassword(data) {
 	]);
 	const tag = cipher.getAuthTag();
 
-	password.push({
+	password.splice(place, 0, {
 		...data,
 		password: [
 			salt.toString("base64"),
@@ -135,7 +145,7 @@ ipcMain.on("password", (e, data) => {
 		if (index !== -1) {
 			password.splice(index, 1);
 		}
-		addPassword(data.data);
+		addPassword(data.data, index);
 	} else if (data.type == "delete") {
 		const hcqId = data.id;
 		const index = password.findIndex((n) => n.userdata.id == hcqId);
@@ -217,18 +227,6 @@ app.once("ready", () => {
 	ipcMain.on("ready", (e) => {
 		return (e.returnValue = beforeSetting);
 	});
-	const { existsSync, readdirSync, unlink } = require("fs");
-	const p = {
-		win32: `${process.env.TEMP}/meteor`,
-		darwin: `/tmp/meteor`,
-		linux: `/tmp/meteor`,
-	}[process.platform];
-	if (existsSync(p)) {
-		const files = readdirSync(p)
-			.filter((n) => n.startsWith("update_"))
-			.map((n) => `${p}/${n}`);
-		files.map((n) => unlink(n, () => {}));
-	}
 });
 
 let mainWindow = null;
@@ -252,9 +250,22 @@ autoUpdater.on("error", () => {
 function start() {
 	mainWindow = null;
 	c2 = 0;
+	if (!beforeSetting.size)
+		beforeSetting.size = {
+			modeSelect: {
+				width: 800,
+				height: 600,
+				maximized: false,
+			},
+			main: {
+				width: 960,
+				height: 720,
+				maximized: false,
+			},
+		};
 	const modeSelectWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
+		width: beforeSetting.size.modeSelect.width || 800,
+		height: beforeSetting.size.modeSelect.height || 600,
 		show: false,
 		webPreferences: {
 			devTools: !app.isPackaged,
@@ -271,21 +282,38 @@ function start() {
 	modeSelectWindow.once("ready-to-show", () => {
 		if (versionChecked) {
 			modeSelectWindow.show();
+			if (beforeSetting.size.modeSelect.maximized)
+				modeSelectWindow.maximize();
 		} else {
 			autoUpdater.on("update-not-available", () => {
 				modeSelectWindow.show();
+				if (beforeSetting.size.modeSelect.maximized)
+					modeSelectWindow.maximize();
 			});
 			autoUpdater.on("update-cancelled", () => {
 				modeSelectWindow.show();
+				if (beforeSetting.size.modeSelect.maximized)
+					modeSelectWindow.maximize();
 			});
 			autoUpdater.on("error", () => {
 				modeSelectWindow.show();
+				if (beforeSetting.size.modeSelect.maximized)
+					modeSelectWindow.maximize();
 			});
 		}
 	});
 	modeSelectWindow.once("close", () => {
 		if (c1) return;
 		if (process.platform === "darwin") return;
+		if (modeSelectWindow.isMaximized()) {
+			beforeSetting.size.modeSelect.maximized = true;
+		} else {
+			beforeSetting.size.modeSelect.maximized = false;
+			beforeSetting.size.modeSelect.width =
+				modeSelectWindow.getBounds().width;
+			beforeSetting.size.modeSelect.height =
+				modeSelectWindow.getBounds().height;
+		}
 		app.exit();
 	});
 	modeSelectWindow.webContents.on("did-create-window", (w, e) => {
@@ -294,11 +322,20 @@ function start() {
 	modeSelectWindow.setMenuBarVisibility(false);
 	ipcMain.once("start", (e, obj) => {
 		c1 = 1;
+		if (modeSelectWindow.isMaximized()) {
+			beforeSetting.size.modeSelect.maximized = true;
+		} else {
+			beforeSetting.size.modeSelect.maximized = false;
+			beforeSetting.size.modeSelect.width =
+				modeSelectWindow.getBounds().width;
+			beforeSetting.size.modeSelect.height =
+				modeSelectWindow.getBounds().height;
+		}
 		modeSelectWindow.close();
 
 		mainWindow = new BrowserWindow({
-			width: 960,
-			height: 720,
+			width: beforeSetting.size.main.width,
+			height: beforeSetting.size.main.height,
 			show: false,
 			webPreferences: {
 				devTools: !app.isPackaged,
@@ -327,12 +364,20 @@ function start() {
 
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
+			if (beforeSetting.size.main.maximized) mainWindow.maximize();
 			isMainWindow = true;
 		});
 		mainWindow.on("close", () => {
 			isMainWindow = false;
 			if (c2) return;
 			if (process.platform === "darwin") return;
+			if (mainWindow.isMaximized()) {
+				beforeSetting.size.main.maximized = true;
+			} else {
+				beforeSetting.size.main.maximized = false;
+				beforeSetting.size.main.width = mainWindow.getBounds().width;
+				beforeSetting.size.main.height = mainWindow.getBounds().height;
+			}
 			app.exit();
 		});
 		mainWindow.webContents.once("did-create-window", (w, e) => {
@@ -397,6 +442,15 @@ const templateMenu = [
 					if (!isMainWindow) return;
 					if (focusedWindow) {
 						c2 = 1;
+						if (focusedWindow.isMaximized()) {
+							beforeSetting.size.main.maximized = true;
+						} else {
+							beforeSetting.size.main.maximized = false;
+							beforeSetting.size.main.width =
+								focusedWindow.getBounds().width;
+							beforeSetting.size.main.height =
+								focusedWindow.getBounds().height;
+						}
 						focusedWindow.close();
 						start();
 					}
