@@ -149,8 +149,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 				if (e.ctrlKey && e.key === "w") {
 					e.preventDefault();
-					const activeTab = $(".tab.active");
-					return f.tabClose({ target: activeTab });
+					return f.tabClose({ target: $(".tab.active") });
 				}
 				if (e.ctrlKey && e.key === "t") {
 					e.preventDefault();
@@ -181,7 +180,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 			};
 			ipcRenderer.on("tabAdd", () => f.tabAdd());
-			ipcRenderer.on("tabClose", (e, d) => f.tabClose(d));
+			ipcRenderer.on("tabClose", (e, d) => f.tabClose($(".tab.active")));
 			ipcRenderer.on("tabChange", (e, d) => {
 				const activeTab = $(".tab.active");
 				const nextTab = activeTab.next(".tab").length
