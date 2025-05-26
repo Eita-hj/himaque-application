@@ -144,8 +144,10 @@ ipcMain.on("password", (e, data) => {
 		const index = password.findIndex((n) => n.userdata.id == userdata.id);
 		if (index !== -1) {
 			password.splice(index, 1);
+			addPassword(data.data, index);
+		} else {
+			addPassword(data.data);
 		}
-		addPassword(data.data, index);
 	} else if (data.type == "delete") {
 		const hcqId = data.id;
 		const index = password.findIndex((n) => n.userdata.id == hcqId);

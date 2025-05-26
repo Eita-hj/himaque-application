@@ -595,17 +595,31 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 		GamenSizeAuto();
 		document.body.style.display = "";
+		
+		const passArrToDom = (arr) => arr.map((n) => 
+			`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
+				<div style="flex-grow: 3;">
+					No.${n.userdata.id} ${n.userdata.name}
+				</div>
+				<div style="flex-grow: 1;">
+					<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
+					<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
+				</div>
+			</div>`
+		).join("")
 
 		$("#toplogindiv")
 			.css("height", "35%")
 			.append('<button id="pwmgrbtn">パスワードマネージャー</button>');
 		$("#page_login").append(
 			`<div id="pwmgr" style="width: 100vw; height: 100dvh; background-color: #00000055; display: none; position: fixed; top: 0; left: 0;">
-				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: min(60vh, 60vw); background-color: #ffffff;">
+				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: min(70vh, 70vw); background-color: #ffffff;">
 					<button id="pwmgr_close" style="position: absolute; top: 0; right: 0; padding: 10px; cursor: pointer;">×</button>
-					<div id="pwmgr_content_inner" style="padding: 20px;">
+					<div id="pwmgr_content_inner" style="padding: 20px;"><br />
 						<h2 style="text-align: center; font-size: 2rem;">パスワードマネージャー</h2>
-						<div id="pwmgr_list" style="max-height: 50vh; overflow-y: auto;">
+						<input type="text" placeholder="名前またはNo.検索" oninput="searchPwdData(this.value)" />
+						<button id="pwdmgr_reload" style="margin-left: 10px;" onclick="searchPwdData()">更新</button>
+						<div id="pwmgr_list" style="max-height: min(35vh, 35vw); overflow-y: auto;">
 						</div>
 					</div>
 				</div>
@@ -616,26 +630,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 		});
 		$("#pwmgrbtn").on("click", () => {
 			$("#pwmgr").show();
-			$("#pwmgr_list").empty();
 			if (password.length == 0) {
-				$("#pwmgr_list").append(
+				$("#pwmgr_list").html(
 					`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
 				);
-				return;
+			} else {
+				$("#pwmgr_list").html(passArrToDom(password));
 			}
-			password.forEach((n) => {
-				$("#pwmgr_list").append(
-					`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
-						<div style="flex-grow: 3;">
-							No.${n.userdata.id} ${n.userdata.name}
-						</div>
-						<div style="flex-grow: 1;">
-							<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
-							<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
-						</div>
-					</div>`
-				);
-			});
 		});
 
 		let shiftPressed = false;
@@ -649,6 +650,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 				shiftPressed = false;
 			}
 		});
+		
+		let prevSearchQuery = "";
+		this.searchPwdData = async (query = prevSearchQuery) => {
+			password = await ipcRenderer.invoke("password")
+			prevSearchQuery = query;
+			$("#pwmgr_list").empty();
+			const arr = password.filter(n => n.userdata.id == query || n.userdata.name.includes(query))
+			$("#pwmgr_list").html(passArrToDom(arr));
+		}
+
 
 		this.loadPwdData = (id) => {
 			const data = password.find((n) => n.userdata.id == id);
@@ -674,26 +685,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 				const index = password.findIndex((n) => n.userdata.id == id);
 				if (index !== -1) {
 					password.splice(index, 1);
-					$("#pwmgr_list").empty();
 					if (password.length == 0) {
-						$("#pwmgr_list").append(
+						$("#pwmgr_list").html(
 							`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
 						);
 						return;
+					} else {
+						$("#pwmgr_list").html(passArrToDom(password));
 					}
-					password.forEach((n) => {
-						$("#pwmgr_list").append(
-							`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
-								<div style="flex-grow: 3;">
-									No.${n.userdata.id} ${n.userdata.name}
-								</div>
-								<div style="flex-grow: 1;">
-									<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
-									<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
-								</div>
-							</div>`
-						);
-					});
 				}
 			}
 		};
@@ -791,6 +790,110 @@ window.addEventListener("DOMContentLoaded", async () => {
 				},
 			});
 		};
+		
+		this.ExitGame = () => {
+			PageChangeLogin()
+			$("#layerroot").empty();
+			$("#effectgamen").empty();
+			$("#pwmgr").hide();
+			BgmStop();
+			myteam = 9
+			sp = 0
+			layercount = 0
+			gazoucount = 0
+			radiocount = 0
+			effectcount = 0
+			myquest = 0
+			mynanido = 0
+			$coloreturn = 0
+			cnf_ougi = 0
+			cnf_act = 0
+			item_hyouzi = 0
+			item_tag = []
+			item_nowtag = 0
+			admita = 0
+			adkesi = 0
+			vsmode = 0
+			ERRORCOUNT = 4
+			nowtime = Date.now()
+			clear_time = new Date(nowtime + 60 * 60 * 24 * 1000 * 14)
+			expires = clear_time.toGMTString()
+			shokaicore = 0;
+			now_scene = 0
+			now_field = 0
+			now_channel = 0
+			now_bc = "???"
+			now_gold = 0
+			now_mana = 0
+			now_sizai = 0
+			now_tamasi = 0
+			now_mission = 0
+			now_guild = 0
+			now_chara = 0
+			yarinaosinotane = 0
+			SID = 0
+			myid = 0
+			SKEY = 0
+			seskey = 0
+			myguildid = 0
+			myparty = 0
+			mypttype = 0
+			colosss = ""
+			charadata = 0
+			charasibori_job = 0
+			charasibori_lv = 0
+			charasibori_vs = 0
+			charasibori_tag = 0;
+			bmark_kobetu = -1
+			bmark_guild = -1
+			ksgF5error = 0
+			ksgBmark = 0
+			KSGERRORLIM = 5;
+			kobetuSort = []
+			kL = []
+			nowkobetushow = 0;
+			musilist = []
+			bmark_zentai = -1
+			bmark_pt = -1
+			msgs_zentai = []
+			msgs_pt = []
+			msgs_guild = []
+			topmsgs = ["", ""]
+			midoku_zentai = 0
+			midoku_pt = 0
+			midoku_guild = 0
+			midoku_musi = 0;
+			datarate = 0
+			rate_fild = 0
+			errorflg_fild = 0
+			f5hassha = 0
+			now_stage = 0
+			haikei_x = 0
+			ougiPaletteArray = []
+			ougiPaletteid = 0
+			ougibtnSP = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+			jobreset_lv = 0
+			nokoripoint = 0
+			bonus_pow = 0
+			bonus_def = 0
+			bonus_tec = 0
+			userpow = 0
+			userdef = 0
+			usertec = 0
+			sozaidata = []
+			PAYMANA = 100
+			NEEDGOLD = 50000
+			NEEDSIZAI = 300
+			porchmax = 30;
+			porchmany = 0;
+			quizid = 0
+			spmonster = 0x1
+			friendData = []
+			sinseiData = []
+			nowchatshow = 0
+			musiarray = []
+			AutoLoginKaizyo()
+		}
 	};
 
 	const h =
@@ -808,6 +911,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 				"パスワードにa-z,A-Z,0-9以外は使えません"
 			);
 		const autologin = $("#loginhozi").prop("checked");
+
+		$("#loginformid").val("");
+		$("#loginformpass").val("");
 
 		if (wait_LoginGame) return;
 		wait_LoginGame = true;
@@ -989,6 +1095,21 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 			});
 	}, 500);
+	
+	this.PageChangeLogin = () => {
+		$(".page").hide();
+		$("#topad").show();
+		$("#page_login").show();
+		$("#loginformid").val("");
+		$("#loginformpass").val("");
+	}
+	this.PageChangeMain = () => {
+		$(".page").hide();
+		$("#topad").hide();
+		$("#page_main").show();
+		$("#loginformid").val("");
+		$("#loginformpass").val("");
+	}
 
 	document.addEventListener("click", (e) => {
 		const { target } = e;

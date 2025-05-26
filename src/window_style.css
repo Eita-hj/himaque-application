@@ -5,7 +5,7 @@
 
 #gamearea {
 	width: calc(100vw - 5px);
-	height: 95dvh;
+	height: calc(100dvh - 5px);
 	display: grid;
 	gap: 0;
 }
