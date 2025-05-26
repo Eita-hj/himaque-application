@@ -59,18 +59,17 @@ window.addEventListener("DOMContentLoaded", async () => {
 			const f = {};
 
 			f.tabClose = (e) => {
-				const t = $(e.target).closest(".tab");
-				if (t.hasClass("active")) {
-					const next = t.next(".tab").length
-						? t.next(".tab")
-						: t.prev(".tab");
+				if (e.hasClass("active")) {
+					const next = e.next(".tab").length
+						? e.next(".tab")
+						: e.prev(".tab");
 					if (next.length) {
 						f.tabChange({ target: next });
 					}
 				}
-				const id = Number(t.attr("name"));
+				const id = Number(e.attr("name"));
 				hcqLinks.find((n) => n.id == id).used = false;
-				$(e.target).closest(".tab").remove();
+				e.closest(".tab").remove();
 				$(`iframe[name="${id}"]`).remove();
 				if (!hcqLinks.find((n) => n.used)) f.tabAdd();
 			};
@@ -96,7 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				);
 				$(`.tab[name="${d.id}"] p`).on("click", (e) => f.tabChange(e));
 				$(`.tab[name="${d.id}"] .close`).on("click", (e) =>
-					f.tabClose(e)
+					f.tabClose($(e.parentNode.parentNode))
 				);
 				$("#gamearea").append(
 					`<iframe src="${d.url}" name="${d.id}"></iframe>`
@@ -134,6 +133,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 			});
 
 			f.keydownEvent = (e) => {
+				console.log(e.key)
 				if (e.ctrlKey && e.key === "Tab") {
 					e.preventDefault();
 					const activeTab = $(".tab.active");
@@ -149,7 +149,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 				if (e.ctrlKey && e.key === "w") {
 					e.preventDefault();
-					return f.tabClose({ target: $(".tab.active")});
+					return f.tabClose($(".tab.active"));
 				}
 				if (e.ctrlKey && e.key === "t") {
 					e.preventDefault();
@@ -179,6 +179,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 					return;
 				}
 			};
+			$(document).on("keydown", f.keydownEvent);
+
 			ipcRenderer.on("tabAdd", () => f.tabAdd());
 			ipcRenderer.on("tabClose", (e, d) => f.tabClose($(".tab.active")));
 			ipcRenderer.on("tabChange", (e, d) => {
