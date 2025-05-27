@@ -95,7 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				);
 				$(`.tab[name="${d.id}"] p`).on("click", (e) => f.tabChange(e));
 				$(`.tab[name="${d.id}"] .close`).on("click", (e) => {
-					f.tabClose($(e.target).closest(".tab"))
+					f.tabClose($(e.target).closest(".tab"));
 				});
 				$("#gamearea").append(
 					`<iframe src="${d.url}" name="${d.id}"></iframe>`
@@ -277,6 +277,29 @@ window.addEventListener("DOMContentLoaded", async () => {
 	window.onbeforeunload = () => {};
 
 	window.PreLoad = async () => {
+		for (let i = 1; i <= 15; i++) {
+			let d = false;
+			$(`#ougibtn${i}`)
+				.removeAttr("onclick")
+				.on("dragstart", (e) => {
+					e.preventDefault();
+					Ougi(i);
+					d = true;
+				})
+				.on("click", (e) => {
+					console.log("click");
+					if (d) {
+						d = false;
+						return e.preventDefault();
+					}
+					Ougi(i);
+				});
+			$(document).on("mouseup", (e) => {
+				setTimeout(() => {
+					d = false;
+				}, 0);
+			});
+		}
 		let password = await ipcRenderer.invoke("password");
 		globalThis.addonApp = true;
 		[
@@ -356,9 +379,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 		GamenSizeAuto();
 		document.body.style.display = "";
-		
-		const passArrToDom = (arr) => arr.map((n) => 
-			`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
+
+		const passArrToDom = (arr) =>
+			arr
+				.map(
+					(n) =>
+						`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
 				<div style="flex-grow: 3;">
 					No.${n.userdata.id} ${n.userdata.name}
 				</div>
@@ -367,7 +393,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 					<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
 				</div>
 			</div>`
-		).join("")
+				)
+				.join("");
 
 		$("#toplogindiv")
 			.css("height", "35%")
@@ -414,12 +441,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 		let prevSearchQuery = "";
 		this.searchPwdData = async (query = prevSearchQuery) => {
-			password = await ipcRenderer.invoke("password")
+			password = await ipcRenderer.invoke("password");
 			prevSearchQuery = query;
 			$("#pwmgr_list").empty();
-			const arr = password.filter(n => n.userdata.id == query || n.userdata.name.includes(query))
+			const arr = password.filter(
+				(n) => n.userdata.id == query || n.userdata.name.includes(query)
+			);
 			$("#pwmgr_list").html(passArrToDom(arr));
-		}
+		};
 
 		this.loadPwdData = (id) => {
 			const data = password.find((n) => n.userdata.id == id);
@@ -601,110 +630,110 @@ window.addEventListener("DOMContentLoaded", async () => {
 		};
 
 		this.presets = await this.getPresetData();
-		
+
 		this.ExitGame = () => {
-			PageChangeLogin()
+			PageChangeLogin();
 			$("#layerroot").empty();
 			$("#effectgamen").empty();
 			$("#pwmgr").hide();
 			BgmStop();
-			myteam = 9
-			sp = 0
-			layercount = 0
-			gazoucount = 0
-			radiocount = 0
-			effectcount = 0
-			myquest = 0
-			mynanido = 0
-			$coloreturn = 0
-			cnf_ougi = 0
-			cnf_act = 0
-			item_hyouzi = 0
-			item_tag = []
-			item_nowtag = 0
-			admita = 0
-			adkesi = 0
-			vsmode = 0
-			ERRORCOUNT = 4
-			nowtime = Date.now()
-			clear_time = new Date(nowtime + 60 * 60 * 24 * 1000 * 14)
-			expires = clear_time.toGMTString()
+			myteam = 9;
+			sp = 0;
+			layercount = 0;
+			gazoucount = 0;
+			radiocount = 0;
+			effectcount = 0;
+			myquest = 0;
+			mynanido = 0;
+			$coloreturn = 0;
+			cnf_ougi = 0;
+			cnf_act = 0;
+			item_hyouzi = 0;
+			item_tag = [];
+			item_nowtag = 0;
+			admita = 0;
+			adkesi = 0;
+			vsmode = 0;
+			ERRORCOUNT = 4;
+			nowtime = Date.now();
+			clear_time = new Date(nowtime + 60 * 60 * 24 * 1000 * 14);
+			expires = clear_time.toGMTString();
 			shokaicore = 0;
-			now_scene = 0
-			now_field = 0
-			now_channel = 0
-			now_bc = "???"
-			now_gold = 0
-			now_mana = 0
-			now_sizai = 0
-			now_tamasi = 0
-			now_mission = 0
-			now_guild = 0
-			now_chara = 0
-			yarinaosinotane = 0
-			SID = 0
-			myid = 0
-			SKEY = 0
-			seskey = 0
-			myguildid = 0
-			myparty = 0
-			mypttype = 0
-			colosss = ""
-			charadata = 0
-			charasibori_job = 0
-			charasibori_lv = 0
-			charasibori_vs = 0
+			now_scene = 0;
+			now_field = 0;
+			now_channel = 0;
+			now_bc = "???";
+			now_gold = 0;
+			now_mana = 0;
+			now_sizai = 0;
+			now_tamasi = 0;
+			now_mission = 0;
+			now_guild = 0;
+			now_chara = 0;
+			yarinaosinotane = 0;
+			SID = 0;
+			myid = 0;
+			SKEY = 0;
+			seskey = 0;
+			myguildid = 0;
+			myparty = 0;
+			mypttype = 0;
+			colosss = "";
+			charadata = 0;
+			charasibori_job = 0;
+			charasibori_lv = 0;
+			charasibori_vs = 0;
 			charasibori_tag = 0;
-			bmark_kobetu = -1
-			bmark_guild = -1
-			ksgF5error = 0
-			ksgBmark = 0
+			bmark_kobetu = -1;
+			bmark_guild = -1;
+			ksgF5error = 0;
+			ksgBmark = 0;
 			KSGERRORLIM = 5;
-			kobetuSort = []
-			kL = []
+			kobetuSort = [];
+			kL = [];
 			nowkobetushow = 0;
-			musilist = []
-			bmark_zentai = -1
-			bmark_pt = -1
-			msgs_zentai = []
-			msgs_pt = []
-			msgs_guild = []
-			topmsgs = ["", ""]
-			midoku_zentai = 0
-			midoku_pt = 0
-			midoku_guild = 0
+			musilist = [];
+			bmark_zentai = -1;
+			bmark_pt = -1;
+			msgs_zentai = [];
+			msgs_pt = [];
+			msgs_guild = [];
+			topmsgs = ["", ""];
+			midoku_zentai = 0;
+			midoku_pt = 0;
+			midoku_guild = 0;
 			midoku_musi = 0;
-			datarate = 0
-			rate_fild = 0
-			errorflg_fild = 0
-			f5hassha = 0
-			now_stage = 0
-			haikei_x = 0
-			ougiPaletteArray = []
-			ougiPaletteid = 0
+			datarate = 0;
+			rate_fild = 0;
+			errorflg_fild = 0;
+			f5hassha = 0;
+			now_stage = 0;
+			haikei_x = 0;
+			ougiPaletteArray = [];
+			ougiPaletteid = 0;
 			ougibtnSP = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-			jobreset_lv = 0
-			nokoripoint = 0
-			bonus_pow = 0
-			bonus_def = 0
-			bonus_tec = 0
-			userpow = 0
-			userdef = 0
-			usertec = 0
-			sozaidata = []
-			PAYMANA = 100
-			NEEDGOLD = 50000
-			NEEDSIZAI = 300
+			jobreset_lv = 0;
+			nokoripoint = 0;
+			bonus_pow = 0;
+			bonus_def = 0;
+			bonus_tec = 0;
+			userpow = 0;
+			userdef = 0;
+			usertec = 0;
+			sozaidata = [];
+			PAYMANA = 100;
+			NEEDGOLD = 50000;
+			NEEDSIZAI = 300;
 			porchmax = 30;
 			porchmany = 0;
-			quizid = 0
-			spmonster = 0x1
-			friendData = []
-			sinseiData = []
-			nowchatshow = 0
-			musiarray = []
-			AutoLoginKaizyo()
-		}
+			quizid = 0;
+			spmonster = 0x1;
+			friendData = [];
+			sinseiData = [];
+			nowchatshow = 0;
+			musiarray = [];
+			AutoLoginKaizyo();
+		};
 	};
 	const h =
 		'\n++\t<div+id="topad_top"></div>\n\x3C!--+admax+-->\n<div+class="admax-switch"+data-admax-id="97bbe8a54d9e077bdb4145747114424a"+style="display:+inline-block;+width:+468px;+height:+60px;"><iframe+width="468"+height="60"+scrolling="no"+frameborder="0"+allowtransparency="true"+style="display:inline-block;vertical-align:+bottom;"></iframe></div>\n\x3Cscript+type="text/javascript">\n(admaxads+=+window.admaxads+||+[]).push({admax_id:+"97bbe8a54d9e077bdb4145747114424a",type:+"switch"});\x3C/script>\n\x3Cscript+type="text/javascript"+charset="utf-8"+src="https://adm.shinobi.jp/st/t.js"+async="">\x3C/script>\n\x3C!--+admax+-->\n++\t<div+id="topad_bottom"></div>\n++';
@@ -912,14 +941,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 		$("#page_login").show();
 		$("#loginformid").val("");
 		$("#loginformpass").val("");
-	}
+	};
 	this.PageChangeMain = () => {
 		$(".page").hide();
 		$("#topad").hide();
 		$("#page_main").show();
 		$("#loginformid").val("");
 		$("#loginformpass").val("");
-	}
+	};
 
 	document.addEventListener("click", (e) => {
 		const { target } = e;
