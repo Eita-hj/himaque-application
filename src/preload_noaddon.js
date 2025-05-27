@@ -95,7 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				);
 				$(`.tab[name="${d.id}"] p`).on("click", (e) => f.tabChange(e));
 				$(`.tab[name="${d.id}"] .close`).on("click", (e) =>
-					f.tabClose($(e.parentNode))
+					f.tabClose($(e.target).closest(".tab"))
 				);
 				$("#gamearea").append(
 					`<iframe src="${d.url}" name="${d.id}"></iframe>`
