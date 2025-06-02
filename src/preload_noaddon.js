@@ -625,14 +625,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 				.map(
 					(n) =>
 						`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
-				<div style="flex-grow: 3;">
-					No.${n.userdata.id} ${n.userdata.name}
-				</div>
-				<div style="flex-grow: 1;">
-					<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
-					<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
-				</div>
-			</div>`
+							<div style="flex-grow: 3;">
+								No.${n.userdata.id} ${n.userdata.name}
+							</div>
+							<div style="flex-grow: 1;">
+								<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
+								<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
+							</div>
+						</div>`
 				)
 				.join("");
 
