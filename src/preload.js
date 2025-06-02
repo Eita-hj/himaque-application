@@ -385,14 +385,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 				.map(
 					(n) =>
 						`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
-				<div style="flex-grow: 3;">
-					No.${n.userdata.id} ${n.userdata.name}
-				</div>
-				<div style="flex-grow: 1;">
-					<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
-					<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
-				</div>
-			</div>`
+							<div style="flex-grow: 3;">
+								No.${n.userdata.id} ${n.userdata.name}
+							</div>
+							<div style="flex-grow: 1;">
+								<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
+								<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
+							</div>
+						</div>`
 				)
 				.join("");
 
@@ -580,46 +580,19 @@ window.addEventListener("DOMContentLoaded", async () => {
 			});
 		};
 
-		this.addonModules = {
-			multilinechat: false,
-			chatmaxup: false,
-			displaystatus: false,
-			morepresets: false,
-		};
+		this.addonModules = {};
 
-		const { addonModules } = ipcRenderer.sendSync("startgame");
-
-		if (addonModules.multilinechat)
-			await fetch("https://addon.pjeita.top/module/multilinechat.js", {
+		const { addonModules: modules, addonData } = ipcRenderer.sendSync("startgame");
+		addonData.forEach((n) => addonModules[n.id] = false);
+		const addon = addonData.filter(n => modules[n.id]).toSorted(n => n.n)
+		for (let i = 0; i < addon.length; i++) {
+			this.addonModules[addon[i].id] = true;
+			await fetch(`https://addon.pjeita.top/module/${addon[i].id}.js`, {
 				cache: "no-store",
 			})
 				.then((n) => n.text())
-				.then(eval);
-
-		await fetch("https://addon.pjeita.top/module/main.js", {
-			cache: "no-store",
-		})
-			.then((n) => n.text())
-			.then(eval);
-
-		if (addonModules.chatmaxup)
-			await fetch("https://addon.pjeita.top/module/chatmaxup.js", {
-				cache: "no-store",
-			})
-				.then((n) => n.text())
-				.then(eval);
-		if (addonModules.displaystatus)
-			await fetch("https://addon.pjeita.top/module/displaystatus.js", {
-				cache: "no-store",
-			})
-				.then((n) => n.text())
-				.then(eval);
-		if (addonModules.morepresets)
-			await fetch("https://addon.pjeita.top/module/morepresets.js", {
-				cache: "no-store",
-			})
-				.then((n) => n.text())
-				.then(eval);
+				.then(eval)
+		}
 
 		this.getPresetData = async () => {
 			return await ipcRenderer.invoke("ougipreset");
