@@ -226,7 +226,18 @@ ipcMain.handle("state", (e, d) => {
 });
 
 app.once("ready", () => {
-	ipcMain.on("ready", (e) => {
+	ipcMain.on("ready", async (e) => {
+		beforeSetting.addonData = []
+		await fetch("https://addon.pjeita.top/module/modules.json").then(n => n.json())
+			.then((modules) => {
+				modules.forEach(n => {
+					if (app.isPackaged && n.beta) return;
+					if (n.id in beforeSetting.addonModules) {
+						beforeSetting.addonModules[n.id] = false;
+					}
+					beforeSetting.addonData.push(n)
+				})
+			})
 		return (e.returnValue = beforeSetting);
 	});
 });
@@ -390,6 +401,7 @@ function start() {
 
 ipcMain.on("startgame", (e) => {
 	return (e.returnValue = {
+		addonData: beforeSetting.addonData,
 		addonModules: beforeSetting.addonModules,
 		windowCount: beforeSetting.windowCount,
 		type: beforeSetting.type,
