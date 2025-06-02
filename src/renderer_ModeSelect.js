@@ -1,3 +1,4 @@
+const addonList = []
 function send() {
 	const obj = {};
 	obj.addon =
@@ -10,12 +11,10 @@ function send() {
 	obj.mode = [...document.getElementsByName("mode")].find(
 		(n) => n.checked
 	).value;
-	obj.addonModules = {
-		multilinechat: document.getElementById("multilinechataddon").checked,
-		chatmaxup: document.getElementById("chatmaxupaddon").checked,
-		displaystatus: document.getElementById("displaystatusaddon").checked,
-		morepresets: document.getElementById("morepresetsaddon").checked,
-	};
+	obj.addonModules = {};
+	addonList.forEach((n) => {
+		obj.addonModules[n] = document.getElementById(`addon_${n}`).checked;
+	});
 	window.electronAPI.start(obj);
 }
 
@@ -29,14 +28,19 @@ function ready() {
 	if (["2", "3", "4"].includes(n.windowCount))
 		document.getElementById("windowtype").value = n.type;
 	document.getElementById("addonType").style.display = n.addon ? "" : "none";
-	document.getElementById("multilinechataddon").checked =
-		!!n.addonModules?.multilinechat;
-	document.getElementById("chatmaxupaddon").checked =
-		!!n.addonModules?.chatmaxup;
-	document.getElementById("displaystatusaddon").checked =
-		!!n.addonModules?.displaystatus;
-	document.getElementById("morepresetsaddon").checked =
-		!!n.addonModules?.morepresets;
+
+	n.addonData.forEach(d => {
+		document.getElementById("addonType").innerHTML +=
+			`<p>
+				<label>
+					<input type="checkbox" id="addon_${d.id}" ${
+						n.addonModules[d.id] || d.id == "main" ? "checked" : ""
+					} ${d.id == "main" ? "disabled" : ""} />
+					${d.name}
+				</label>
+			</p>`;
+		addonList.push(d.id);
+	})
 	if (n.mode == "window")
 		document.getElementById("windowcount").style.display = "";
 	(
