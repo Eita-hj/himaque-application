@@ -42,6 +42,7 @@ const beforeSetting = store.get("setting") || {
 		chatmaxup: false,
 		displaystatus: false,
 		morepresets: false,
+		morefilter: false,
 	},
 	type: "a",
 	mode: "tab",
@@ -159,10 +160,10 @@ ipcMain.on("password", (e, data) => {
 });
 
 ipcMain.on("passwordsort", (e, data) => {
-	const p = data.map(n => password.find(m => m.userdata.id == n)); 
+	const p = data.map((n) => password.find((m) => m.userdata.id == n));
 	password.length = 0;
 	password.push(...p);
-})
+});
 
 ipcMain.handle("ougipreset", (d, e) => {
 	return (
@@ -233,19 +234,20 @@ ipcMain.handle("state", (e, d) => {
 
 app.once("ready", () => {
 	ipcMain.on("ready", async (e) => {
-		beforeSetting.addonData = []
+		beforeSetting.addonData = [];
 		await fetch("https://addon.pjeita.top/module/modules.json", {
 			cache: "no-store",
-		}).then(n => n.json())
+		})
+			.then((n) => n.json())
 			.then((modules) => {
-				modules.forEach(n => {
+				modules.forEach((n) => {
 					if (app.isPackaged && n.beta) return;
-					if (n.id in beforeSetting.addonModules) {
+					if (!(n.id in beforeSetting.addonModules)) {
 						beforeSetting.addonModules[n.id] = false;
 					}
-					beforeSetting.addonData.push(n)
-				})
-			})
+					beforeSetting.addonData.push(n);
+				});
+			});
 		return (e.returnValue = beforeSetting);
 	});
 });
@@ -380,6 +382,7 @@ function start() {
 		beforeSetting.type = obj?.type || "a";
 		beforeSetting.addonModules = obj.addonModules;
 		beforeSetting.mode = obj.mode;
+		store.set("setting", beforeSetting);
 
 		mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`));
 
