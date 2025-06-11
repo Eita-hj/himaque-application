@@ -158,6 +158,12 @@ ipcMain.on("password", (e, data) => {
 	}
 });
 
+ipcMain.on("passwordsort", (e, data) => {
+	const p = data.map(n => password.find(m => m.userdata.id == n)); 
+	password.length = 0;
+	password.push(...p);
+})
+
 ipcMain.handle("ougipreset", (d, e) => {
 	return (
 		store.get("ougipreset") || {
@@ -228,7 +234,9 @@ ipcMain.handle("state", (e, d) => {
 app.once("ready", () => {
 	ipcMain.on("ready", async (e) => {
 		beforeSetting.addonData = []
-		await fetch("https://addon.pjeita.top/module/modules.json").then(n => n.json())
+		await fetch("https://addon.pjeita.top/module/modules.json", {
+			cache: "no-store",
+		}).then(n => n.json())
 			.then((modules) => {
 				modules.forEach(n => {
 					if (app.isPackaged && n.beta) return;
