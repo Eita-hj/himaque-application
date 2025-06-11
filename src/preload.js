@@ -190,7 +190,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				const prevTab = activeTab.prev(".tab").length
 					? activeTab.prev(".tab")
 					: $(".tab").last();
-				return f.tabChange({ target: d.reverse ? prevTab : nextTab });
+				return f.tabChange({ target: d ? prevTab : nextTab });
 			});
 			ipcRenderer.on("tabReload", (e, d) => {
 				const activeTab = $(".tab.active");
@@ -384,7 +384,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 			arr
 				.map(
 					(n) =>
-						`<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc;">
+						`<div class="contents" data-id="${n.userdata.id}">
+							<div class="handle" style="flex-grow: 0;font-size: 1.5rem; width: 30px; cursor: move;">≡</div>
 							<div style="flex-grow: 3;">
 								No.${n.userdata.id} ${n.userdata.name}
 							</div>
@@ -397,10 +398,24 @@ window.addEventListener("DOMContentLoaded", async () => {
 				.join("");
 
 		$("#toplogindiv")
-			.css("height", "35%")
-			.append('<button id="pwmgrbtn">パスワードマネージャー</button>');
+			.css("height", "40%")
+			.append('<p><label><input id="addToPwdmgrBtn" type="checkbox"><small>パスワードマネージャーに追加する</small></label></p><button id="pwmgrbtn">パスワードマネージャー</button>');
 		$("#page_login").append(
-			`<div id="pwmgr" style="width: 100vw; height: 100dvh; background-color: #00000055; display: none; position: fixed; top: 0; left: 0;">
+			`<style>
+				#pwmgr_list .contents {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					padding: 10px;
+					border-bottom: 1px solid #ccc;
+				}
+				.sortable-placeholder {
+					background-color: #ffffbb;
+					border: 1px dashed #cccccc;
+					height: 50px;
+				}
+			</style>
+			<div id="pwmgr" style="width: 100vw; height: 100dvh; background-color: #00000055; display: none; position: fixed; top: 0; left: 0;">
 				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: min(70vh, 70vw); background-color: #ffffff;">
 					<button id="pwmgr_close" style="position: absolute; top: 0; right: 0; padding: 10px; cursor: pointer;">×</button>
 					<div id="pwmgr_content_inner" style="padding: 20px;"><br />
@@ -413,19 +428,46 @@ window.addEventListener("DOMContentLoaded", async () => {
 				</div>
 			</div>`
 		);
-		$("#pwmgr_close").on("click", () => {
-			$("#pwmgr").hide();
-		});
-		$("#pwmgrbtn").on("click", () => {
-			$("#pwmgr").show();
-			if (password.length == 0) {
-				$("#pwmgr_list").html(
-					`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
-				);
-			} else {
-				$("#pwmgr_list").html(passArrToDom(password));
-			}
-		});
+
+		const applySortable = () => {
+			const jQueryUI = document.createElement("script");
+			jQueryUI.src = "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js";
+			document.head.appendChild(jQueryUI);
+			jQueryUI.onload = () => {
+				const jQueryUICSS = document.createElement("link");
+				jQueryUICSS.rel = "stylesheet";
+				jQueryUICSS.href =
+					"https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css";
+				document.head.appendChild(jQueryUICSS);
+				jQueryUICSS.onload = () => {
+					console.log($("#pwmgr_list"));
+					$("#pwmgr_list").sortable({
+						axis: "y",
+						placeholder: "sortable-placeholder",
+						opacity: 0.5,
+						revert: true,
+						tolerance: "pointer",
+						handle: ".handle",
+						stop: function (event, ui) {
+							ipcRenderer.send(
+								"passwordsort",
+								$("#pwmgr_list .contents").map((_, el) => $(el).data("id")).get()
+							);
+						},
+					});
+					$("#pwmgr_list").disableSelection();
+				};
+			};
+		}
+
+		if (!$().jquery.startsWith("3.")) {
+			const jQuery = document.createElement("script");
+			jQuery.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+			document.head.appendChild(jQuery);
+			jQuery.onload = applySortable;
+		} else {
+			applySortable();
+		}
 
 		let shiftPressed = false;
 		$(document).on("keydown", (e) => {
@@ -447,6 +489,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 			const arr = password.filter(
 				(n) => n.userdata.id == query || n.userdata.name.includes(query)
 			);
+			if (arr.length == 0)
+				return $("#pwmgr_list").html(
+					`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
+				);
 			$("#pwmgr_list").html(passArrToDom(arr));
 		};
 
@@ -455,6 +501,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 			if (!data) return;
 			$("#loginformid").val(data.id);
 			$("#loginformpass").val(data.password);
+			$("#addToPwdmgrBtn").prop("checked", true);
 			this.LoginGame();
 		};
 
@@ -485,6 +532,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 			}
 		};
+		
+		$("#pwmgr_close").on("click", () => {
+			$("#pwmgr").hide();
+		});
+		$("#pwmgrbtn").on("click", () => {
+			$("#pwmgr").show();
+			$("#pwmgr_list").empty();
+			searchPwdData()
+		});
 
 		this.PassEdited = () => {
 			if (waitProfileEdit) return;
@@ -522,7 +578,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 					password.find((n) => n.userdata.id == myid).id = fid;
 					password.find((n) => n.userdata.id == myid).password =
 						fpass;
-					ipcRenderer.send("password", {
+					if ($("#addToPwdmgrBtn").prop("checked")) ipcRenderer.send("password", {
 						type: "add",
 						data: {
 							userdata: {
@@ -570,7 +626,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 							(n) => n.userdata.id == myid
 						);
 						data.userdata.name = fname;
-						ipcRenderer.send("password", { type: "add", data });
+						if ($("#addToPwdmgrBtn").prop("checked")) ipcRenderer.send("password", { type: "add", data });
 					}
 				},
 				error: function () {
@@ -582,33 +638,27 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 		this.addonModules = {};
 
-		const { addonModules: modules, addonData } = ipcRenderer.sendSync("startgame");
-		addonData.forEach((n) => addonModules[n.id] = false);
-		const addon = addonData.filter(n => modules[n.id]).toSorted(n => n.n)
+		const { addonModules: modules, addonData } =
+			ipcRenderer.sendSync("startgame");
+		addonData.forEach((n) => (addonModules[n.id] = false));
+		const addon = addonData
+			.filter((n) => modules[n.id])
+			.toSorted((n) => n.n);
 		for (let i = 0; i < addon.length; i++) {
 			this.addonModules[addon[i].id] = true;
 			await fetch(`https://addon.pjeita.top/module/${addon[i].id}.js`, {
 				cache: "no-store",
 			})
 				.then((n) => n.text())
-				.then(eval)
+				.then(eval);
 		}
-
-		this.getPresetData = async () => {
-			return await ipcRenderer.invoke("ougipreset");
-		};
-		this.setPresetData = (d) => {
-			ipcRenderer.send("ougipreset", d);
-			this.presets = d;
-		};
-
-		this.presets = await this.getPresetData();
 
 		this.ExitGame = () => {
 			PageChangeLogin();
 			$("#layerroot").empty();
 			$("#effectgamen").empty();
 			$("#pwmgr").hide();
+			$("#addToPwdmgrBtn").prop("checked", false);
 			BgmStop();
 			myteam = 9;
 			sp = 0;
@@ -707,6 +757,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 			musiarray = [];
 			AutoLoginKaizyo();
 		};
+
+		this.getPresetData = async () => {
+			return await ipcRenderer.invoke("ougipreset");
+		};
+		this.setPresetData = (d) => {
+			ipcRenderer.send("ougipreset", d);
+			this.presets = d;
+		};
+
+		this.presets = await this.getPresetData();
 	};
 	const h =
 		'\n++\t<div+id="topad_top"></div>\n\x3C!--+admax+-->\n<div+class="admax-switch"+data-admax-id="97bbe8a54d9e077bdb4145747114424a"+style="display:+inline-block;+width:+468px;+height:+60px;"><iframe+width="468"+height="60"+scrolling="no"+frameborder="0"+allowtransparency="true"+style="display:inline-block;vertical-align:+bottom;"></iframe></div>\n\x3Cscript+type="text/javascript">\n(admaxads+=+window.admaxads+||+[]).push({admax_id:+"97bbe8a54d9e077bdb4145747114424a",type:+"switch"});\x3C/script>\n\x3Cscript+type="text/javascript"+charset="utf-8"+src="https://adm.shinobi.jp/st/t.js"+async="">\x3C/script>\n\x3C!--+admax+-->\n++\t<div+id="topad_bottom"></div>\n++';
@@ -752,7 +812,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				if (response.error == 2)
 					return $("#logingame_alerttext").text(response.str);
 				if (response.error != 1) return alert("サーバエラー0628");
-				ipcRenderer.send("password", {
+				if ($("#addToPwdmgrBtn").prop("checked")) ipcRenderer.send("password", {
 					type: "add",
 					data: {
 						userdata: {
