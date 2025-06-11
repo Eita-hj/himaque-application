@@ -287,7 +287,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 					d = true;
 				})
 				.on("click", (e) => {
-					console.log("click");
 					if (d) {
 						d = false;
 						return e.preventDefault();
@@ -440,7 +439,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 					"https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css";
 				document.head.appendChild(jQueryUICSS);
 				jQueryUICSS.onload = () => {
-					console.log($("#pwmgr_list"));
 					$("#pwmgr_list").sortable({
 						axis: "y",
 						placeholder: "sortable-placeholder",
