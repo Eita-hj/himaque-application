@@ -253,7 +253,6 @@ app.once("ready", () => {
 });
 
 let mainWindow = null;
-let nowWindow = {};
 
 app.on("ready", () => {
 	if (!versionChecked) autoUpdater.checkForUpdatesAndNotify();
@@ -362,10 +361,7 @@ function start() {
 			show: false,
 			webPreferences: {
 				devTools: !app.isPackaged,
-				preload: path.join(
-					__dirname,
-					obj.addon ? "preload.js" : "preload_noaddon.js"
-				),
+				preload: path.join(__dirname, "preload.js"),
 				contextIsolation: false,
 				nodeIntegration: false,
 				nodeIntegrationInSubFrames: true,
@@ -412,6 +408,7 @@ function start() {
 
 ipcMain.on("startgame", (e) => {
 	return (e.returnValue = {
+		addon: beforeSetting.addon,
 		addonData: beforeSetting.addonData,
 		addonModules: beforeSetting.addonModules,
 		windowCount: beforeSetting.windowCount,
