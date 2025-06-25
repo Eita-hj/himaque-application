@@ -1,4 +1,5 @@
 window.addEventListener("DOMContentLoaded", async () => {
+	window.onbeforeunload = () => {};
 	const { ipcRenderer } = require("electron");
 	const hcqLinks = [
 		{
@@ -54,7 +55,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 	];
 	const gameData = ipcRenderer.sendSync("startgame");
 
-	if (window.self === window.top) {
+	if (window.self === window.top && window.location.protocol === "file:") {
 		if (gameData.mode == "tab") {
 			const $ = window.jQuery;
 			const f = {};
@@ -202,7 +203,23 @@ window.addEventListener("DOMContentLoaded", async () => {
 			});
 
 			f.tabAdd();
-		} else if (gameData.mode == "window") {
+			
+			$("#tabs").sortable({
+				axis: "x",
+				placeholder: "tab-placeholder",
+				items: ".tab",
+				opacity: 0.5,
+				tolerance: "pointer",
+				containment: "#tabs",
+				revert: 300,
+				start: () => {
+					$("#gamearea_cover").show();
+				},
+				stop: () => {
+					$("#gamearea_cover").hide();
+				}
+			});
+		} else if (gameData.mode == "window" && window.location.protocol === "file:") {
 			const $ = window.jQuery;
 			const DOM = hcqLinks
 				.slice(0, Number(gameData.windowCount))
@@ -275,7 +292,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 	}
 	if (!new URL(location.href).origin.includes("himaquest.com")) return;
 	document.body.style.display = "none";
-	window.onbeforeunload = () => {};
 
 	if (!gameData.addon) {
 		this.notificationSound = new Audio(
