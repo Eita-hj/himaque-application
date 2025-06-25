@@ -9,6 +9,7 @@ body {
 #tabarea {
 	height: 45px;
 	width: 100%;
+	overflow-y: hidden;
 	border-bottom: 1px solid #000;
 }
 
@@ -17,13 +18,23 @@ body {
 	width: 100%;
 }
 
+#gamearea_cover {
+	position: absolute;
+	top: 45px;
+	left: 0;
+	width: 100%;
+	height: calc(100% - 45px);
+	box-sizing: border-box;
+}
+
 #tabs {
 	display: inline-block;
-	max-width: calc(100% - 60px);
+	max-width: calc(100vw - 60px);
 	min-width: 180px;
-	overflow-x: scroll;
+	overflow-x: auto;
 	overflow-y: hidden;
-	height: 40px;
+	height: 48px;
+	margin: 0;
 	position: relative;
 	white-space: nowrap;
 }
@@ -31,13 +42,29 @@ body {
 #tabs .tab {
 	display: inline-block;
 	border: 1px solid #000;
-	height: 40px;
+	height: 45px;
 	width: 180px;
+	top: 0 !important;
 	background-color: #65bbbe;
 	position: relative;
+	box-sizing: border-box;
+	vertical-align: top;
 }
+
 #tabs .tab.active {
 	background-color: #94dcde;
+}
+
+#tabs .tab-placeholder {
+	display: inline-block;
+	margin: 0;
+	height: 45px;
+	width: 180px;
+	vertical-align: top;
+	top: 0 !important;
+	background-color: #94dcde;
+	position: relative;
+	box-sizing: border-box;
 }
 
 #tabs .tab p {
@@ -78,7 +105,7 @@ body {
 }
 
 #tabs::-webkit-scrollbar {
-	height: 5px;
+	height: 3px;
 	width: 5px;
 	background-color: #94dcde;
 }
@@ -86,7 +113,7 @@ body {
 #tabs::-webkit-scrollbar-thumb {
 	background: #d8faeb;
 	width: 3px;
-	height: 3px;
+	height: 1px;
 	border-radius: 5px;
 	padding: 1px;
 }
