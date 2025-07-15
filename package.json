@@ -1,6 +1,6 @@
 {
 	"name": "himaque-application",
-	"version": "5.7.0",
+	"version": "5.7.1",
 	"description": "application of HIMACHATQUEST",
 	"main": "./src/main.js",
 	"scripts": {
@@ -14,8 +14,7 @@
 	"dependencies": {
 		"electron-store": "8.x",
 		"electron-updater": "^6.6.2",
-		"keytar": "^7.9.0",
-		"node-fetch": "^2.7.0"
+		"keytar": "^7.9.0"
 	},
 	"devDependencies": {
 		"electron": "^28.3.3",
@@ -92,6 +91,6 @@
 			}
 		]
 	},
-	"author": "凶兆の黒猫(No.16762) <sgr.9661.ea@gmail.com>",
+	"author": "凶兆の黒猫(No.16762) <eita@pjeita.top>",
 	"homepage": "https://addon.pjeita.top/"
 }
