@@ -232,22 +232,22 @@ ipcMain.handle("state", (e, d) => {
 	return returnValue;
 });
 
-app.once("ready", () => {
+app.once("ready", async () => {
 	ipcMain.on("ready", async (e) => {
-		beforeSetting.addonData = [];
-		await fetch("https://addon.pjeita.top/module/modules.json", {
+		const { net: { fetch } } = require('electron')
+		const modules = await fetch("https://addon.pjeita.top/module/modules.json", {
 			cache: "no-store",
 		})
 			.then((n) => n.json())
-			.then((modules) => {
-				modules.forEach((n) => {
-					if (app.isPackaged && n.beta) return;
-					if (!(n.id in beforeSetting.addonModules)) {
-						beforeSetting.addonModules[n.id] = false;
-					}
-					beforeSetting.addonData.push(n);
-				});
-			});
+		beforeSetting.addonData = [];
+		console.log(modules);
+		modules.forEach((n) => {
+			if (app.isPackaged && n.beta) return;
+			if (!(n.id in beforeSetting.addonModules)) {
+				beforeSetting.addonModules[n.id] = false;
+			}
+			beforeSetting.addonData.push(n);
+		});
 		return (e.returnValue = beforeSetting);
 	});
 });
