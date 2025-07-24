@@ -81,7 +81,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				$(e.target).closest(".tab").addClass("active");
 				$("iframe").hide();
 				$(`iframe[name="${id}"]`).show();
-				document.title = `表示中のタブ：タブ${id + 1}`;
+				document.title = `表示中のタブ：${$(e.target).closest(".tab").find(".name").text()}`;
 			};
 			f.tabAdd = () => {
 				const d = hcqLinks.find((n) => !n.used);
@@ -91,9 +91,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 				d.used = true;
 				$("#tabs").append(
-					`<div class="tab" name="${d.id}"><p>タブ${
+					`<div class="tab" name="${d.id}"><p><span class="name" style="left:10%">タブ${
 						d.id + 1
-					}<span class="close">×</span></p></div>`
+					}</span><span class="close">×</span></p></div>`
 				);
 				$(`.tab[name="${d.id}"] p`).on("click", (e) => f.tabChange(e));
 				$(`.tab[name="${d.id}"] .close`).on("click", (e) => {
@@ -201,7 +201,17 @@ window.addEventListener("DOMContentLoaded", async () => {
 					.removeAttr("src")
 					.attr("src", hcqLinks.find((n) => n.id == id).url);
 			});
-
+			ipcRenderer.on("nameChange", (e, { id, name }) => {
+				const tab = $(`.tab[name="${id}"]`);
+				if (tab.length) {
+					tab.find(".name")
+						.html(name != null ?`${name} のタブ` : `タブ${id + 1}`)
+						.css({
+							left: name != null ? "3%" : "10%",
+							"font-size": name != null ? "0.45em" : null,
+						});
+				}
+			})
 			f.tabAdd();
 			
 			$("#tabs").sortable({
@@ -537,29 +547,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 		};
 	}
 
+	let username = null;
+	let memo = "";
 	window.PreLoad = async () => {
-		for (let i = 1; i <= 15; i++) {
-			let d = false;
-			$(`#ougibtn${i}`)
-				.removeAttr("onclick")
-				.on("dragstart", (e) => {
-					e.preventDefault();
-					Ougi(i);
-					d = true;
-				})
-				.on("click", (e) => {
-					if (d) {
-						d = false;
-						return e.preventDefault();
-					}
-					Ougi(i);
-				});
-			$(document).on("mouseup", (e) => {
-				setTimeout(() => {
-					d = false;
-				}, 0);
-			});
-		}
+		for (let i = 1; i <= 15; i++) $(`#ougibtn${i}`).css({
+			"user-select": "none",
+			"-webkit-user-drag": "none",
+		});
 		let password = await ipcRenderer.invoke("password");
 		globalThis.addonApp = true;
 		[
@@ -645,11 +639,14 @@ window.addEventListener("DOMContentLoaded", async () => {
 				.map(
 					(n) =>
 						`<div class="contents" data-id="${n.userdata.id}">
-							<div class="handle" style="flex-grow: 0;font-size: 1.5rem; width: 30px; cursor: move;">≡</div>
-							<div style="flex-grow: 3;">
+							<div class="handle" style="font-size: 1.5rem; width: 30px; cursor: move; margin: auto 3px;">≡</div>
+							<div style="vertical-align: middle; margin: auto 3px;">
 								No.${n.userdata.id} ${n.userdata.name}
 							</div>
-							<div style="flex-grow: 1;">
+							<div style="vertical-align: middle; margin: auto 3px;">
+								<input type="text" value="${n?.memo ?? ""}" placeholder="メモを入力" onchange="setPwdMemo(${n.userdata.id}, this.value)" style="width: 100%; box-sizing: border-box; padding: 1px;" />
+							</div>
+							<div style="padding: 0 5px; margin: auto 3px;">
 								<button style="margin: 5px;" onclick="loadPwdData(${n.userdata.id})">ログイン</button>
 								<button style="margin: 5px;" onclick="deletePwdData(${n.userdata.id})">削除</button>
 							</div>
@@ -662,27 +659,54 @@ window.addEventListener("DOMContentLoaded", async () => {
 			.append('<p><label><input id="addToPwdmgrBtn" type="checkbox"><small>パスワードマネージャーに追加する</small></label></p><button id="pwmgrbtn">パスワードマネージャー</button>');
 		$("#page_login").append(
 			`<style>
+				#pwmgr_list {
+					padding-top: 10px;
+				}
 				#pwmgr_list .contents {
-					display: flex;
-					justify-content: space-between;
-					align-items: center;
-					padding: 10px;
+					display: grid;
+					grid-template-columns: 30px 2fr 2fr 1fr;
+					justify-content: center;
+					padding: 5px;
 					border-bottom: 1px solid #ccc;
 				}
-				.sortable-placeholder {
+				#pwmgr_list .sortable-placeholder {
 					background-color: #ffffbb;
 					border: 1px dashed #cccccc;
 					height: 50px;
 				}
+				#pwmgr_list .spinner {
+					border: 4px solid #f3f3f3; /* Light grey */
+					border-top: 4px solid #3498db; /* Blue */
+					border-radius: 50%;
+					width: 30px;
+					height: 30px;
+					animation: spin 2s linear infinite;
+					display: inline-block;
+					vertical-align: middle;
+					margin: auto 10px;
+				}
+				#pwmgr_list .spinner_text {
+					display: inline-block;
+					vertical-align: middle;
+					margin: auto 10px;
+					font-size: 1.2rem;
+					color: #333;
+					margin-left: 10px;
+				}
+				@keyframes spin {
+					0% { transform: rotate(0deg); }
+					100% { transform: rotate(360deg); }
+				}
 			</style>
 			<div id="pwmgr" style="width: 100vw; height: 100dvh; background-color: #00000055; display: none; position: fixed; top: 0; left: 0;">
-				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: min(70vh, 70vw); background-color: #ffffff;">
+				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: strech; background-color: #ffffff;">
 					<button id="pwmgr_close" style="position: absolute; top: 0; right: 0; padding: 10px; cursor: pointer;">×</button>
 					<div id="pwmgr_content_inner" style="padding: 20px;"><br />
 						<h2 style="text-align: center; font-size: 2rem;">パスワードマネージャー</h2>
-						<input type="text" placeholder="名前またはNo.検索" oninput="searchPwdData(this.value)" />
+						<input type="text" style="width: min(420px, 75%);" placeholder="ユーザー名(部分一致)/No.(完全一致)/メモ(部分一致)で検索" oninput="searchPwdData(this.value)" />
 						<button id="pwdmgr_reload" style="margin-left: 10px;" onclick="searchPwdData()">更新</button>
-						<div id="pwmgr_list" style="max-height: min(35vh, 35vw); overflow-y: auto;">
+						<div id="pwmgr_list" style="max-height: min(40vh, 40vw); overflow-y: auto;">
+							<span class="spinner"></span><span class="spinner_text">読み込み中...しばらくお待ちください...</span>
 						</div>
 					</div>
 				</div>
@@ -742,11 +766,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 		let prevSearchQuery = "";
 		this.searchPwdData = async (query = prevSearchQuery) => {
+			$("#pwmgr_list").html(`<span class="spinner"></span><span class="spinner_text">読み込み中...しばらくお待ちください...</span>`);
 			password = await ipcRenderer.invoke("password");
 			prevSearchQuery = query;
 			$("#pwmgr_list").empty();
 			const arr = password.filter(
-				(n) => n.userdata.id == query || n.userdata.name.includes(query)
+				(n) => n.userdata.id == query || n.userdata.name.includes(query) || (n?.memo ?? "").includes(query)
 			);
 			if (arr.length == 0)
 				return $("#pwmgr_list").html(
@@ -758,6 +783,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 		this.loadPwdData = (id) => {
 			const data = password.find((n) => n.userdata.id == id);
 			if (!data) return;
+			memo = data.memo || "";
 			$("#loginformid").val(data.id);
 			$("#loginformpass").val(data.password);
 			$("#addToPwdmgrBtn").prop("checked", true);
@@ -773,6 +799,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 					`No.${id} ${data.userdata.name}のパスワードデータを削除しますか？`
 				);
 			if (check) {
+				$("#pwmgr_list").html(`<span class="spinner"></span><span class="spinner_text">しばらくお待ちください...</span>`);
 				ipcRenderer.send("password", {
 					type: "delete",
 					id: data.userdata.id,
@@ -791,6 +818,20 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 			}
 		};
+
+		this.setPwdMemo = (id, value) => {
+			const index = password.findIndex((n) => n.userdata.id == id);
+			if (index == -1) return;
+			password[index].memo = value;
+			ipcRenderer.send("password", {
+				type: "memo",
+				data: {
+					userdata: password[index].userdata,
+					memo: value,
+				}
+			});
+		}
+
 		
 		$("#pwmgr_close").on("click", () => {
 			$("#pwmgr").hide();
@@ -846,6 +887,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 							},
 							id: fid,
 							password: fpass,
+							memo
 						},
 					});
 					$("#passhenkoudiv")
@@ -868,7 +910,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 			if (fname.length > 50)
 				return alert("名前を50文字以下にしてください");
 			if (fshoukai.length > 1000)
-				return alert("紹介文を1000文字以下にしてください");
+				return alert(`紹介文を1000文字以下にしてください (現在${fshoukai.length}文字)`);
 			if (waitProfileEdit) return;
 			waitProfileEdit = 1;
 			$.ajax({
@@ -884,6 +926,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 						const data = password.find(
 							(n) => n.userdata.id == myid
 						);
+						username = fname;
 						data.userdata.name = fname;
 						if ($("#addToPwdmgrBtn").prop("checked")) ipcRenderer.send("password", { type: "add", data });
 					}
@@ -930,6 +973,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 			$("#pwmgr").hide();
 			$("#addToPwdmgrBtn").prop("checked", false);
 			BgmStop();
+			username = null;
 			myteam = 9;
 			sp = 0;
 			layercount = 0;
@@ -1072,6 +1116,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				if (response.error == 2)
 					return $("#logingame_alerttext").text(response.str);
 				if (response.error != 1) return alert("サーバエラー0628");
+				username = response.username;
 				if ($("#addToPwdmgrBtn").prop("checked")) ipcRenderer.send("password", {
 					type: "add",
 					data: {
@@ -1081,6 +1126,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 						},
 						id: fid,
 						password: fpass,
+						memo
 					},
 				});
 				LoginGameNakami(response);
@@ -1201,6 +1247,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 		ipcRenderer
 			.invoke("state", {
 				url: new URL(location.href).origin,
+				name: SID ? username : null
 			})
 			.then((s) => {
 				if (!s) return;
