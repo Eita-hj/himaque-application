@@ -33,7 +33,60 @@ const state = {
 	},
 };
 
-const beforeSetting = store.get("setting") || {
+const hcqLinks = [
+	{
+		url: "https://himaquest.com",
+		id: 0,
+		name: null,
+	},
+	{
+		url: "http://himaquest.com.",
+		id: 1,
+		name: null,
+	},
+	{
+		url: "http://www.himaquest.com",
+		id: 2,
+		name: null,
+	},
+	{
+		url: "http://www.himaquest.com.",
+		id: 3,
+		name: null,
+	},
+	{
+		url: "http://sub1.himaquest.com",
+		id: 4,
+		name: null,
+	},
+	{
+		url: "http://sub1.himaquest.com.",
+		id: 5,
+		name: null,
+	},
+	{
+		url: "http://sub2.himaquest.com",
+		id: 6,
+		name: null,
+	},
+	{
+		url: "http://sub2.himaquest.com.",
+		id: 7,
+		name: null,
+	},
+	{
+		url: "http://sub3.himaquest.com",
+		id: 8,
+		name: null,
+	},
+	{
+		url: "http://sub3.himaquest.com.",
+		id: 9,
+		name: null,
+	},
+];
+
+const setting = store.get("setting") || {
 	windowCount: 1,
 	addon: false,
 	more_setting: "a",
@@ -76,6 +129,7 @@ let masterkey = "";
 const password = store.get("password") || [];
 
 const crypto = require("crypto");
+const { get } = require("http");
 
 function addPassword(data, place = password.length) {
 	const { password: pass } = data;
@@ -156,6 +210,13 @@ ipcMain.on("password", (e, data) => {
 			password.splice(index, 1);
 		}
 		store.set("password", password);
+	} else if (data.type == "memo") {
+		const { userdata, memo } = data.data;
+		const index = password.findIndex((n) => n.userdata.id == userdata.id);
+		if (index !== -1) {
+			password[index].memo = memo;
+			store.set("password", password);
+		}
 	}
 });
 
@@ -181,19 +242,19 @@ ipcMain.on("ougipreset", (e, d) => {
 });
 
 ipcMain.on("tabAdd", () => {
-	if (beforeSetting.mode == "window") return;
+	if (setting.mode == "window") return;
 	mainWindow.webContents.send("tabAdd");
 });
 ipcMain.on("tabClose", () => {
-	if (beforeSetting.mode == "window") return;
+	if (setting.mode == "window") return;
 	mainWindow.webContents.send("tabClose");
 });
 ipcMain.on("tabChange", (e, d) => {
-	if (beforeSetting.mode == "window") return;
+	if (setting.mode == "window") return;
 	mainWindow.webContents.send("tabChange", d.reverse);
 });
 ipcMain.on("tabReload", (e, d) => {
-	if (beforeSetting.mode == "window") return;
+	if (setting.mode == "window") return;
 	mainWindow.webContents.send("tabReload", 1);
 });
 ipcMain.on("state", (e, d) => {
@@ -215,7 +276,7 @@ ipcMain.on("state", (e, d) => {
 	}
 });
 ipcMain.handle("state", (e, d) => {
-	const { url } = d;
+	const { url, name } = d;
 	const returnValue = {};
 	if (state.use.exitField) {
 		if (!state.links.exitField.includes(url)) {
@@ -229,6 +290,13 @@ ipcMain.handle("state", (e, d) => {
 			returnValue.partyReady = true;
 		}
 	}
+	if (setting.mode == "tab") {
+		const d = hcqLinks.find((n) => n.url == url);
+		if (d.name != name) {
+			d.name = name;
+			mainWindow.webContents.send("nameChange", {id: d.id, name});
+		}
+	}
 	return returnValue;
 });
 
@@ -239,16 +307,15 @@ app.once("ready", async () => {
 			cache: "no-store",
 		})
 			.then((n) => n.json())
-		beforeSetting.addonData = [];
-		console.log(modules);
+		setting.addonData = [];
 		modules.forEach((n) => {
 			if (app.isPackaged && n.beta) return;
-			if (!(n.id in beforeSetting.addonModules)) {
-				beforeSetting.addonModules[n.id] = false;
+			if (!(n.id in setting.addonModules)) {
+				setting.addonModules[n.id] = false;
 			}
-			beforeSetting.addonData.push(n);
+			setting.addonData.push(n);
 		});
-		return (e.returnValue = beforeSetting);
+		return (e.returnValue = setting);
 	});
 });
 
@@ -272,8 +339,8 @@ autoUpdater.on("error", () => {
 function start() {
 	mainWindow = null;
 	c2 = 0;
-	if (!beforeSetting.size)
-		beforeSetting.size = {
+	if (!setting.size)
+		setting.size = {
 			modeSelect: {
 				width: 800,
 				height: 600,
@@ -286,8 +353,8 @@ function start() {
 			},
 		};
 	const modeSelectWindow = new BrowserWindow({
-		width: beforeSetting.size.modeSelect.width || 800,
-		height: beforeSetting.size.modeSelect.height || 600,
+		width: setting.size.modeSelect.width || 800,
+		height: setting.size.modeSelect.height || 600,
 		show: false,
 		webPreferences: {
 			devTools: !app.isPackaged,
@@ -304,22 +371,22 @@ function start() {
 	modeSelectWindow.once("ready-to-show", () => {
 		if (versionChecked) {
 			modeSelectWindow.show();
-			if (beforeSetting.size.modeSelect.maximized)
+			if (setting.size.modeSelect.maximized)
 				modeSelectWindow.maximize();
 		} else {
 			autoUpdater.on("update-not-available", () => {
 				modeSelectWindow.show();
-				if (beforeSetting.size.modeSelect.maximized)
+				if (setting.size.modeSelect.maximized)
 					modeSelectWindow.maximize();
 			});
 			autoUpdater.on("update-cancelled", () => {
 				modeSelectWindow.show();
-				if (beforeSetting.size.modeSelect.maximized)
+				if (setting.size.modeSelect.maximized)
 					modeSelectWindow.maximize();
 			});
 			autoUpdater.on("error", () => {
 				modeSelectWindow.show();
-				if (beforeSetting.size.modeSelect.maximized)
+				if (setting.size.modeSelect.maximized)
 					modeSelectWindow.maximize();
 			});
 		}
@@ -328,12 +395,12 @@ function start() {
 		if (c1) return;
 		if (process.platform === "darwin") return;
 		if (modeSelectWindow.isMaximized()) {
-			beforeSetting.size.modeSelect.maximized = true;
+			setting.size.modeSelect.maximized = true;
 		} else {
-			beforeSetting.size.modeSelect.maximized = false;
-			beforeSetting.size.modeSelect.width =
+			setting.size.modeSelect.maximized = false;
+			setting.size.modeSelect.width =
 				modeSelectWindow.getBounds().width;
-			beforeSetting.size.modeSelect.height =
+			setting.size.modeSelect.height =
 				modeSelectWindow.getBounds().height;
 		}
 		app.exit();
@@ -345,19 +412,19 @@ function start() {
 	ipcMain.once("start", (e, obj) => {
 		c1 = 1;
 		if (modeSelectWindow.isMaximized()) {
-			beforeSetting.size.modeSelect.maximized = true;
+			setting.size.modeSelect.maximized = true;
 		} else {
-			beforeSetting.size.modeSelect.maximized = false;
-			beforeSetting.size.modeSelect.width =
+			setting.size.modeSelect.maximized = false;
+			setting.size.modeSelect.width =
 				modeSelectWindow.getBounds().width;
-			beforeSetting.size.modeSelect.height =
+			setting.size.modeSelect.height =
 				modeSelectWindow.getBounds().height;
 		}
 		modeSelectWindow.close();
 
 		mainWindow = new BrowserWindow({
-			width: beforeSetting.size.main.width,
-			height: beforeSetting.size.main.height,
+			width: setting.size.main.width,
+			height: setting.size.main.height,
 			show: false,
 			webPreferences: {
 				devTools: !app.isPackaged,
@@ -373,18 +440,20 @@ function start() {
 
 		if (!app.isPackaged) mainWindow.webContents.openDevTools();
 
-		beforeSetting.windowCount = obj.windowCount;
-		beforeSetting.addon = obj.addon;
-		beforeSetting.type = obj?.type || "a";
-		beforeSetting.addonModules = obj.addonModules;
-		beforeSetting.mode = obj.mode;
-		store.set("setting", beforeSetting);
+		setting.windowCount = obj.windowCount;
+		setting.addon = obj.addon;
+		setting.type = obj?.type || "a";
+		setting.addonModules = obj.addonModules;
+		setting.mode = obj.mode;
+
+		for (let i = 0; i < hcqLinks.length; i++) hcqLinks[i].name = null;
+		store.set("setting", setting);
 
 		mainWindow.loadFile(path.join(__dirname, `${obj.mode}.html`));
 
 		mainWindow.once("ready-to-show", () => {
 			mainWindow.show();
-			if (beforeSetting.size.main.maximized) mainWindow.maximize();
+			if (setting.size.main.maximized) mainWindow.maximize();
 			isMainWindow = true;
 		});
 		mainWindow.on("close", () => {
@@ -392,11 +461,11 @@ function start() {
 			if (c2) return;
 			if (process.platform === "darwin") return;
 			if (mainWindow.isMaximized()) {
-				beforeSetting.size.main.maximized = true;
+				setting.size.main.maximized = true;
 			} else {
-				beforeSetting.size.main.maximized = false;
-				beforeSetting.size.main.width = mainWindow.getBounds().width;
-				beforeSetting.size.main.height = mainWindow.getBounds().height;
+				setting.size.main.maximized = false;
+				setting.size.main.width = mainWindow.getBounds().width;
+				setting.size.main.height = mainWindow.getBounds().height;
 			}
 			app.exit();
 		});
@@ -408,17 +477,17 @@ function start() {
 
 ipcMain.on("startgame", (e) => {
 	return (e.returnValue = {
-		addon: beforeSetting.addon,
-		addonData: beforeSetting.addonData,
-		addonModules: beforeSetting.addonModules,
-		windowCount: beforeSetting.windowCount,
-		type: beforeSetting.type,
-		mode: beforeSetting.mode,
+		addon: setting.addon,
+		addonData: setting.addonData,
+		addonModules: setting.addonModules,
+		windowCount: setting.windowCount,
+		type: setting.type,
+		mode: setting.mode,
 	});
 });
 
 app.on("quit", () => {
-	store.set("setting", beforeSetting);
+	store.set("setting", setting);
 });
 
 const templateMenu = [
@@ -465,12 +534,12 @@ const templateMenu = [
 					if (focusedWindow) {
 						c2 = 1;
 						if (focusedWindow.isMaximized()) {
-							beforeSetting.size.main.maximized = true;
+							setting.size.main.maximized = true;
 						} else {
-							beforeSetting.size.main.maximized = false;
-							beforeSetting.size.main.width =
+							setting.size.main.maximized = false;
+							setting.size.main.width =
 								focusedWindow.getBounds().width;
-							beforeSetting.size.main.height =
+							setting.size.main.height =
 								focusedWindow.getBounds().height;
 						}
 						focusedWindow.close();
