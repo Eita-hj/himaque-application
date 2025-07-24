@@ -634,12 +634,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 		GamenSizeAuto();
 		document.body.style.display = "";
 
-		const passArrToDom = (arr) =>
+		const passArrToDom = (arr, isSearch) =>
 			arr
 				.map(
 					(n) =>
 						`<div class="contents" data-id="${n.userdata.id}">
-							<div class="handle" style="font-size: 1.5rem; width: 30px; cursor: move; margin: auto 3px;">≡</div>
+							<div class="handle" style="font-size: 1.5rem; width: 30px; cursor: move; margin: auto 3px; ${isSearch ? "pointer-events: none;" : ""}">≡</div>
 							<div style="vertical-align: middle; margin: auto 3px;">
 								No.${n.userdata.id} ${n.userdata.name}
 							</div>
@@ -699,7 +699,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				}
 			</style>
 			<div id="pwmgr" style="width: 100vw; height: 100dvh; background-color: #00000055; display: none; position: fixed; top: 0; left: 0;">
-				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: strech; background-color: #ffffff;">
+				<div id="pwmgr_content" style="display: block; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; height: stretch; background-color: #ffffff;">
 					<button id="pwmgr_close" style="position: absolute; top: 0; right: 0; padding: 10px; cursor: pointer;">×</button>
 					<div id="pwmgr_content_inner" style="padding: 20px;"><br />
 						<h2 style="text-align: center; font-size: 2rem;">パスワードマネージャー</h2>
@@ -777,7 +777,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 				return $("#pwmgr_list").html(
 					`<div style="text-align: center; padding: 20px;">パスワードが登録されていません</div>`
 				);
-			$("#pwmgr_list").html(passArrToDom(arr));
+			$("#pwmgr_list").html(passArrToDom(arr, !!query.length));
 		};
 
 		this.loadPwdData = (id) => {
